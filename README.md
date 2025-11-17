@@ -31,7 +31,7 @@ sudo apt install stow
 1. **Clone this repository:**
    ```bash
    cd ~
-   git clone 
+   git clone git@github.com:ctrites1/dotfiles.git 
    ```
 
 2. **Stow the packages you want:**
