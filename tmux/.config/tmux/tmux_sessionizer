@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+export FZF_DEFAULT_OPTS=" \
+--color=bg+:#2d3b55,bg:#212b42,spinner:#9fd4f0,hl:#b78aea \
+--color=fg:#d0eaff,header:#b78aea,info:#b8d0ff,pointer:#9fd4f0 \
+--color=marker:#9fd4f0,fg+:#d0eaff,prompt:#b8d0ff,hl+:#b78aea"
+
+if [[ $# -eq 1 ]]; then
+    selected=$1
+echo "why2"
+else
+    selected=$(printf "%s\n" "$HOME"  $(find /var/www ~/dotfiles/ ~/.config ~/.local ~/projects ~/metrized /mnt/c/Users/Christine/ /mnt/c/Users/Christine/Documents/metrized /mnt/c/Users/Christine/Documents/Code-Projects/ /mnt/c/Users/Christine/Documents/BCIT-FSWD/  -mindepth 0 -maxdepth 3 -type d) | fzf)
+fi
+echo "why"
+
+if [[ -z $selected ]]; then
+    exit 0
+fi
+
+selected_name=$(basename "$selected" | tr . _)
+tmux_running=$(pgrep tmux)
+
+if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
+    tmux new-session -s $selected_name -c $selected
+    exit 0
+fi
+
+if ! tmux has-session -t=$selected_name 2> /dev/null; then
+    tmux new-session -ds $selected_name -c $selected
+fi
+
+tmux switch-client -t $selected_name
