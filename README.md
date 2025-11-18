@@ -2,7 +2,7 @@
 
 Personal configuration files managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
-## 📁 Structure
+## Structure
 
 ```
 ~/dotfiles/
@@ -100,7 +100,7 @@ stow -n <package-name>
    stow newapp
    ```
 
-## ⚠️ Notes
+## Notes
 
 - Always run `stow` from the `~/dotfiles` directory
 - Package folders should mirror the structure relative to `~`
