@@ -52,7 +52,7 @@ return {
         inko = { 'inko' },
         janet = { 'janet' },
         json = { 'jsonlint' },
-        markdown = { 'vale' },
+        markdown = { 'vale', 'markdownlint' },
         rst = { 'vale' },
         ruby = { 'ruby' },
         terraform = { 'tflint' },
