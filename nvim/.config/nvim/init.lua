@@ -238,7 +238,7 @@ require('lazy').setup({
         { '<leader>w', group = '[W]orkspace' },
         { '<leader>t', group = '[T]oggle' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
-        { '<leader>l', group = '󱉥 Lists' },
+        { '<leader>x', group = '󱉥 Lists' },
       },
     },
   },
@@ -676,40 +676,40 @@ require('lazy').setup({
 
       formatters = {
         prettierd = {
-          require_cwd = true,
-          cwd = function(self, ctx)
-            return require('conform.util').root_file {
-              '.prettierrc',
-              '.prettierrc.json',
-              '.prettierrc.yml',
-              '.prettierrc.yaml',
-              '.prettierrc.js',
-              '.prettierrc.cjs',
-              '.prettierrc.mjs',
-              'prettier.config.js',
-              'prettier.config.cjs',
-              'prettier.config.mjs',
-              'package.json',
-            }(self, ctx)
-          end,
+          require_cwd = false,
+          -- cwd = function(self, ctx)
+          --   return require('conform.util').root_file {
+          --     '.prettierrc',
+          --     '.prettierrc.json',
+          --     '.prettierrc.yml',
+          --     '.prettierrc.yaml',
+          --     '.prettierrc.js',
+          --     '.prettierrc.cjs',
+          --     '.prettierrc.mjs',
+          --     'prettier.config.js',
+          --     'prettier.config.cjs',
+          --     'prettier.config.mjs',
+          --     'package.json',
+          --   }(self, ctx)
+          -- end,
         },
         prettier = {
-          require_cwd = true,
-          cwd = function(self, ctx)
-            return require('conform.util').root_file {
-              '.prettierrc',
-              '.prettierrc.json',
-              '.prettierrc.yml',
-              '.prettierrc.yaml',
-              '.prettierrc.js',
-              '.prettierrc.cjs',
-              '.prettierrc.mjs',
-              'prettier.config.js',
-              'prettier.config.cjs',
-              'prettier.config.mjs',
-              'package.json',
-            }(self, ctx)
-          end,
+          require_cwd = false,
+          -- cwd = function(self, ctx)
+          --   return require('conform.util').root_file {
+          --     '.prettierrc',
+          --     '.prettierrc.json',
+          --     '.prettierrc.yml',
+          --     '.prettierrc.yaml',
+          --     '.prettierrc.js',
+          --     '.prettierrc.cjs',
+          --     '.prettierrc.mjs',
+          --     'prettier.config.js',
+          --     'prettier.config.cjs',
+          --     'prettier.config.mjs',
+          --     'package.json',
+          --   }(self, ctx)
+          -- end,
           -- prepend_args = {
           --   '--config-precedence',
           --   'prefer-file',
