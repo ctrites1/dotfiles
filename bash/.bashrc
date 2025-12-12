@@ -6862,3 +6862,4 @@ starship_preexec_ps0 ()
     /usr/local/bin/starship time
 }
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+nvm use default --silent
