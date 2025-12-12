@@ -109,7 +109,6 @@ fi
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
-eval "$(starship init bash)"
 if ! shopt -oq posix; then
   if [ -f /usr/share/bash-completion/bash_completion ]; then
     . /usr/share/bash-completion/bash_completion
@@ -6861,5 +6860,17 @@ starship_preexec_ps0 ()
 { 
     /usr/local/bin/starship time
 }
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
 nvm use default --silent
+
+# Fix PWD in tmux panes
+if [ -n "$TMUX" ]; then
+    cd "$(pwd)"
+fi
+
+# Ensure window size is updated (important for tmux)
+shopt -s checkwinsize
+
+# Initialize Starship prompt
+eval "$(starship init bash)"

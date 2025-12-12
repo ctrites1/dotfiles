@@ -1,6 +1,7 @@
 alias vim='nvim'
 alias vi='nvim'
 alias tlist='tmux list-sessions'
-alias tkill='tmux kill-session -t'
+alias tkillses='tmux kill-session -t'
+alias tkillser='tmux kill-server'
 alias vnv='. venv/bin/activate'
 alias cl='clear'
