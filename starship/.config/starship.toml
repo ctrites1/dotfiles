@@ -34,8 +34,8 @@ read_only_style = "red"
 truncation_length = 0 
 truncate_to_repo = false
 fish_style_pwd_dir_length = 0
+home_symbol = "~"
 format = "[$path]($style)[$read_only]($read_only_style) "
-
 
 # Git branch configuration
 [git_branch]

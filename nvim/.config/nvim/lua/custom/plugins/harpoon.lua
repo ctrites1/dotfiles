@@ -8,47 +8,60 @@ return {
     -- REQUIRED: Initialize harpoon
     harpoon:setup()
 
-    -- Basic keymaps for harpoon functionality
-    vim.keymap.set('n', '<leader>a', function()
+    -- Harpoon keymaps under <leader>h prefix
+
+    -- Add current file to harpoon list
+    vim.keymap.set('n', '<leader>ha', function()
       harpoon:list():add()
     end, { desc = 'Harpoon: [A]dd file' })
 
-    vim.keymap.set('n', '<C-e>', function()
+    -- Remove current file from harpoon list
+    vim.keymap.set('n', '<leader>hd', function()
+      harpoon:list():remove()
+    end, { desc = 'Harpoon: [D]elete/remove file' })
+
+    -- Clear all marks from harpoon list
+    vim.keymap.set('n', '<leader>hc', function()
+      harpoon:list():clear()
+    end, { desc = 'Harpoon: [C]lear all marks' })
+
+    -- Toggle harpoon quick menu
+    vim.keymap.set('n', '<leader>hm', function()
       harpoon.ui:toggle_quick_menu(harpoon:list())
-    end, { desc = 'Harpoon: Toggle quick menu' })
+    end, { desc = 'Harpoon: Toggle quick [M]enu' })
 
     -- Navigate to specific file positions (1-5)
-    vim.keymap.set('n', '<leader>1', function()
+    vim.keymap.set('n', '<leader>h1', function()
       harpoon:list():select(1)
     end, { desc = 'Harpoon: Go to file [1]' })
 
-    vim.keymap.set('n', '<leader>2', function()
+    vim.keymap.set('n', '<leader>h2', function()
       harpoon:list():select(2)
     end, { desc = 'Harpoon: Go to file [2]' })
 
-    vim.keymap.set('n', '<leader>3', function()
+    vim.keymap.set('n', '<leader>h3', function()
       harpoon:list():select(3)
     end, { desc = 'Harpoon: Go to file [3]' })
 
-    vim.keymap.set('n', '<leader>4', function()
+    vim.keymap.set('n', '<leader>h4', function()
       harpoon:list():select(4)
     end, { desc = 'Harpoon: Go to file [4]' })
 
-    vim.keymap.set('n', '<leader>5', function()
+    vim.keymap.set('n', '<leader>h5', function()
       harpoon:list():select(5)
     end, { desc = 'Harpoon: Go to file [5]' })
 
     -- Navigate through harpoon list with previous/next
-    vim.keymap.set('n', '<C-S-P>', function()
+    vim.keymap.set('n', '<leader>hp', function()
       harpoon:list():prev()
-    end, { desc = 'Harpoon: Previous file' })
+    end, { desc = 'Harpoon: [P]revious file' })
 
-    vim.keymap.set('n', '<C-S-N>', function()
+    vim.keymap.set('n', '<leader>hn', function()
       harpoon:list():next()
-    end, { desc = 'Harpoon: Next file' })
+    end, { desc = 'Harpoon: [N]ext file' })
 
     -- Telescope integration (custom picker)
-    vim.keymap.set('n', '<leader>sh', function()
+    vim.keymap.set('n', '<leader>hs', function()
       local conf = require('telescope.config').values
       local function toggle_telescope(harpoon_files)
         local file_paths = {}
@@ -69,6 +82,6 @@ return {
       end
 
       toggle_telescope(harpoon:list())
-    end, { desc = '[S]earch [H]arpoon marks' })
+    end, { desc = 'Harpoon: [S]earch marks' })
   end,
 }
