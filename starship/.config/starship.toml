@@ -1,240 +1,207 @@
-# Get editor completions based on the config schema
+# Starship Config - Aesthetic & Minimal
+# Color Palette: Catppuccin-inspired pastels with good contrast
+# Primary: Lavender (#b4befe), Mauve (#cba6f7), Peach (#fab387)
+# Accent: Teal (#94e2d5), Pink (#f5c2e7), Yellow (#f9e2af)
+
 "$schema" = 'https://starship.rs/config-schema.json'
 
-# Set default timeout to 3s (3000ms) 
-command_timeout = 333000
-
-# Inserts a blank line between shell prompts
+command_timeout = 1000
 add_newline = true
 
-# Configure the prompt format to show username and full directory path
+# Two-line format for breathing room
 format = """
-[](fg:#212736)$username[ ](fg:#212736) $directory $git_branch $git_status $package $python
-$character"""
+[╭─](bold #6c7086)\
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$nodejs\
+$python\
+$package
+[╰─](bold #6c7086)$character"""
 
-# Username configuration
+# Minimal username with subtle styling
 [username]
 show_always = true
-style_user = "bg:#212736 fg:blue bold"
-style_root = "bg:#212736 fg:red bold"
-format = "[$user]($style)"
+style_user = "bold #b4befe"
+style_root = "bold #f38ba8"
+format = "[$user]($style) "
 
-# Hostname configuration
 [hostname]
-ssh_symbol = " "
+ssh_symbol = "󰣀 "
 ssh_only = true
 format = "[@$hostname]($style) "
-style = "green bold"
+style = "bold #94e2d5"
 
-# Directory configuration
+# Directory with smart truncation and darker blue
 [directory]
-style = "bold #1e90ff"
+style = "bold #5b8ec6"
 read_only = " 󰌾"
-read_only_style = "red"
-truncation_length = 0 
-truncate_to_repo = false
-fish_style_pwd_dir_length = 0
+read_only_style = "#f38ba8"
+truncation_length = 3
+truncate_to_repo = true
+fish_style_pwd_dir_length = 1
 home_symbol = "~"
 format = "[$path]($style)[$read_only]($read_only_style) "
 
-# Git branch configuration
+# Git branch with icon
 [git_branch]
-symbol = " "
+symbol = " "
 format = "[$symbol$branch]($style) "
-style = "bold #c266ff"
+style = "bold #cba6f7"
 
-# Git status configuration
+# Clean git status with color coding
 [git_status]
 format = '([$all_status$ahead_behind]($style) )'
-style = "bold #8a2be2" 
+style = "#f5c2e7"
 ahead = "⇡${count}"
-diverged = "⇕⇡${ahead_count}⇣${behind_count}"
 behind = "⇣${count}"
+diverged = "⇕${ahead_count}⇣${behind_count}"
 untracked = "?${count}"
-stashed = "↪${count}"
-modified = "~${count}"
+stashed = '$${count}'
+modified = "!${count}"
 staged = "+${count}"
 renamed = "»${count}"
 deleted = "✘${count}"
+conflicted = "=${count}"
 
-# Character configuration
+# Node.js with version
+[nodejs]
+symbol = "󰎙 "
+format = "[$symbol$version]($style) "
+detect_extensions = ["js", "mjs", "cjs", "ts", "tsx"]
+detect_files = ["package.json", ".node-version", ".nvmrc"]
+style = "bold #a6e3a1"
+
+# Python with virtual env highlighting
+[python]
+symbol = " "
+format = '[${symbol}${version}]($style)[ \($virtualenv\)]($style bold) '
+style = "#f9e2af"
+detect_extensions = ["py"]
+detect_files = [
+    "requirements.txt",
+    "pyproject.toml",
+    ".python-version",
+    "Pipfile",
+    "poetry.lock",
+    "setup.py"
+]
+
+# Package version
+[package]
+symbol = "󰏗 "
+format = "[$symbol$version]($style) "
+style = "#fab387"
+display_private = false
+
+# Command duration for long-running tasks
+[cmd_duration]
+min_time = 2000
+format = "[took $duration]($style) "
+style = "#6c7086 italic"
+show_milliseconds = false
+
+# Elegant prompt character
 [character]
-success_symbol = "[»](bold #66ff66)"
-error_symbol = "[✘](bold red)"
+success_symbol = "[❯](bold #a6e3a1)"
+error_symbol = "[❯](bold #f38ba8)"
+vimcmd_symbol = "[❮](bold #a6e3a1)"
 
+# Battery for laptop (optional - uncomment if wanted)
+# [battery]
+# full_symbol = "󰁹 "
+# charging_symbol = "󰂄 "
+# discharging_symbol = "󰂃 "
+# format = "[$symbol$percentage]($style) "
+# 
+# [[battery.display]]
+# threshold = 20
+# style = "bold #f38ba8"
+# 
+# [[battery.display]]
+# threshold = 50
+# style = "#fab387"
 
+# Time display (optional - uncomment if wanted)
+# [time]
+# disabled = false
+# format = '[\[ $time \]]($style) '
+# time_format = "%R"
+# style = "#6c7086"
+
+# Language/Tool icons with matching aesthetic
 [aws]
-symbol = "  "
+symbol = "  "
 
 [buf]
-symbol = " "
-
-[bun]
-symbol = ""
+symbol = " "
 
 [c]
-symbol = " "
+symbol = " "
 
 [cmake]
-symbol = " "
+symbol = " "
 
 [conda]
-symbol = " "
-
-[crystal]
-symbol = " "
+symbol = " "
 
 [dart]
-symbol = " "
+symbol = " "
 
 [docker_context]
-symbol = " "
+symbol = " "
+format = "[$symbol$context]($style) "
+style = "#89b4fa"
 
 [elixir]
-symbol = " "
+symbol = " "
 
 [elm]
-symbol = " "
-
-[fennel]
-symbol = " "
-
-[fossil_branch]
-symbol = " "
-
-[git_commit]
-tag_symbol = '  '
+symbol = " "
 
 [golang]
-symbol = " "
-
-[guix_shell]
-symbol = " "
+symbol = " "
 
 [haskell]
-symbol = " "
-
-[haxe]
-symbol = " "
-
-[hg_branch]
-symbol = " "
+symbol = " "
 
 [java]
-symbol = " "
+symbol = " "
 
 [julia]
-symbol = " "
+symbol = " "
 
 [kotlin]
-symbol = " "
+symbol = " "
 
 [lua]
-symbol = " "
-
-[memory_usage]
-symbol = "󰍛 "
-
-[meson]
-symbol = "󰔷 "
+symbol = " "
 
 [nim]
 symbol = "󰆥 "
 
 [nix_shell]
-symbol = " "
-
-[nodejs]
-symbol = " "
+symbol = " "
 
 [ocaml]
-symbol = " "
-
-[os.symbols]
-Alpaquita = " "
-Alpine = " "
-AlmaLinux = " "
-Amazon = " "
-Android = " "
-Arch = " "
-Artix = " "
-CachyOS = " "
-CentOS = " "
-Debian = " "
-DragonFly = " "
-Emscripten = " "
-EndeavourOS = " "
-Fedora = " "
-FreeBSD = " "
-Garuda = "󰛓 "
-Gentoo = " "
-HardenedBSD = "󰞌 "
-Illumos = "󰈸 "
-Kali = " "
-Linux = " "
-Mabox = " "
-Macos = " "
-Manjaro = " "
-Mariner = " "
-MidnightBSD = " "
-Mint = " "
-NetBSD = " "
-NixOS = " "
-Nobara = " "
-OpenBSD = "󰈺 "
-openSUSE = " "
-OracleLinux = "󰌷 "
-Pop = " "
-Raspbian = " "
-Redhat = " "
-RedHatEnterprise = " "
-RockyLinux = " "
-Redox = "󰀘 "
-Solus = "󰠳 "
-SUSE = " "
-Ubuntu = " "
-Unknown = " "
-Void = " "
-Windows = "󰍲 "
-
-[package]
-symbol = "󰏗 "
-format = "[$symbol$version]($style) "
-
-[perl]
-symbol = " "
+symbol = " "
 
 [php]
-symbol = " "
-
-[pijul_channel]
-symbol = " "
-
-[python]
-symbol = " "
-format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
-detect_extensions = ["py", "pyc", "pyd"]
-detect_files = ["requirements.txt", "pyproject.toml", "Pipfile", ".python-version", "setup.py", "__init__.py"]
-style = "bold #ffdf00"  
-python_binary = ["python", "python3", "python2"]
-
-[rlang]
-symbol = "󰟔 "
-
-[ruby]
-symbol = " "
+symbol = " "
 
 [rust]
 symbol = "󱘗 "
 
 [scala]
-symbol = " "
+symbol = " "
 
 [swift]
-symbol = " "
+symbol = " "
 
 [zig]
-symbol = " "
+symbol = " "
 
 [gradle]
-symbol = " "
+symbol = " "
