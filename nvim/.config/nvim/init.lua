@@ -614,6 +614,9 @@ require('lazy').setup({
         'yamlfmt',
         'yamllint',
         'yaml-language-server',
+        'rust-analyzer',
+        'rustfmt',
+        'codelldb',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -675,6 +678,7 @@ require('lazy').setup({
         javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
         python = { 'black', 'isort', stop_after_first = false },
         yaml = { 'yamlfmt' },
+        rust = { 'rustfmt' },
       },
 
       formatters = {
@@ -924,6 +928,7 @@ require('lazy').setup({
         'typescript',
         'tsx',
         'css',
+        'rust',
       },
       auto_install = true,
       highlight = {

@@ -18,6 +18,7 @@ $git_branch\
 $git_status\
 $nodejs\
 $bun\
+$rust\
 $python\
 $package
 [╰─](bold #6c7086)$character"""
@@ -40,9 +41,8 @@ style = "bold #94e2d5"
 style = "bold #5b8ec6"
 read_only = " 󰌾"
 read_only_style = "#f38ba8"
-truncation_length = 3
-truncate_to_repo = true
-fish_style_pwd_dir_length = 1
+truncation_length = 0
+truncate_to_repo = false
 home_symbol = "~"
 format = "[$path]($style)[$read_only]($read_only_style) "
 
@@ -77,7 +77,7 @@ style = "bold #a6e3a1"
 
 # Bun runtime
 [bun]
-symbol = "🥟 "
+symbol = " "
 format = "[$symbol$version]($style) "
 detect_extensions = ["ts", "tsx", "js", "jsx"]
 detect_files = ["bun.lockb", "bunfig.toml"]
@@ -86,7 +86,7 @@ style = "bold #f9e2af"
 # Python with virtual env highlighting
 [python]
 symbol = " "
-format = '[${symbol}${version}]($style)[ \($virtualenv\)]($style bold) '
+format = '[${symbol}${version}]($style)[ $virtualenv ]($style bold) '
 style = "#f9e2af"
 detect_extensions = ["py"]
 detect_files = [
@@ -265,7 +265,7 @@ disabled = true
 symbol = "󱘗 "
 format = "[$symbol($version )]($style) "
 style = "bold #fab387"
-disabled = true
+disabled = false 
 
 [scala]
 symbol = " "
