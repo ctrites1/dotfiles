@@ -529,7 +529,16 @@ require('lazy').setup({
       -- capabilities = vim.tbl_deep_extend('force', capabilities, require('blink.cmp').default_capabilities())
 
       local servers = {
-        pyright = {},
+        pyright = {
+          settings = {
+            python = {
+              analysis = {
+                typeCheckingMode = 'basic',
+                reportPossiblyUnboundVariable = 'none',
+              },
+            },
+          },
+        },
         lua_ls = {
           settings = {
             Lua = {
@@ -1025,6 +1034,74 @@ end, {})
 
 require('lint').linters_by_ft.python = { 'flake8' }
 require('lint').linters_by_ft.json = { 'jsonlint' }
+
+-- Toggle warnings globally
+vim.g.show_warnings = true
+
+vim.api.nvim_create_user_command('ToggleWarnings', function()
+  vim.g.show_warnings = not vim.g.show_warnings
+
+  local severity_level = vim.g.show_warnings and vim.diagnostic.severity.WARN or vim.diagnostic.severity.ERROR
+
+  -- Apply full diagnostic config (matching your base config structure)
+  vim.diagnostic.config {
+    severity_sort = true,
+    underline = {
+      severity = {
+        min = severity_level,
+      },
+    },
+    signs = vim.g.have_nerd_font and {
+      text = {
+        [vim.diagnostic.severity.ERROR] = '󰅚 ',
+        [vim.diagnostic.severity.WARN] = '󰀪 ',
+        [vim.diagnostic.severity.INFO] = '󰋽 ',
+        [vim.diagnostic.severity.HINT] = '󰌶 ',
+      },
+      severity = {
+        min = severity_level,
+      },
+    } or {
+      text = {
+        [vim.diagnostic.severity.ERROR] = 'E',
+        [vim.diagnostic.severity.WARN] = 'W',
+        [vim.diagnostic.severity.INFO] = 'I',
+        [vim.diagnostic.severity.HINT] = 'H',
+      },
+      severity = {
+        min = severity_level,
+      },
+    },
+    virtual_text = {
+      prefix = '●',
+      source = 'if_many',
+      spacing = 2,
+      severity = {
+        min = severity_level,
+      },
+      format = function(diagnostic)
+        if diagnostic.severity == vim.diagnostic.severity.ERROR then
+          return string.format('ERROR: %s', diagnostic.message)
+        end
+        return diagnostic.message
+      end,
+    },
+    float = {
+      border = 'rounded',
+      source = 'always',
+      header = '',
+      prefix = '',
+    },
+  }
+
+  if vim.g.show_warnings then
+    print 'Warnings enabled globally'
+  else
+    print 'Warnings disabled globally (errors only)'
+  end
+end, {})
+
+vim.keymap.set('n', '<leader>tw', '<cmd>ToggleWarnings<CR>', { desc = '[T]oggle [W]arnings' })
 
 -- Custom Keymaps!
 vim.keymap.set('t', '<C-w><C-w>', '<C-\\><C-n><C-w><C-w>', { noremap = true, desc = 'Navigate from terminal to other windows' })
