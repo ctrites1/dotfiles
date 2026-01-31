@@ -384,7 +384,10 @@ require('lazy').setup({
             vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
           end
 
-          map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+          -- Deprecated, waiting till patched lol
+          -- map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+
+          map('gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
 
           map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
 
