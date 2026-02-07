@@ -3,9 +3,8 @@ return {
   build = ':Cord update',
   opts = {
     editor = {
-      client = 'Neovim',
+      client = 'neovim',
       tooltip = 'The Superior Text Editor',
-      -- icon = nil,
     },
     display = {
       theme = 'catppuccin',
