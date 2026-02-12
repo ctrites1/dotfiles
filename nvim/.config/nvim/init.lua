@@ -623,6 +623,7 @@ require('lazy').setup({
         'debugpy',
         'jsonlint',
         'json-lsp',
+        'yamlfix',
         'yamlfmt',
         'yamllint',
         'yaml-language-server',
@@ -689,7 +690,7 @@ require('lazy').setup({
         typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
         javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
         python = { 'black', 'isort', stop_after_first = false },
-        yaml = { 'yamlfmt' },
+        yaml = { 'yamlfix', 'yamlfmt', stop_after_first = true },
         rust = { 'rustfmt' },
       },
 
