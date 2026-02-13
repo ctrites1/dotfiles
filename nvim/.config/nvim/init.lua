@@ -148,6 +148,9 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
+-- Initialize global LSP config so plugins like blink.cmp can access vim.lsp.config['*']
+vim.lsp.config('*', {})
+
 -- [[ Configure and install plugins ]]
 --  To check the current status of your plugins, run
 --    :Lazy
