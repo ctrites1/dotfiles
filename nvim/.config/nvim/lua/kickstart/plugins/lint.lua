@@ -25,8 +25,16 @@ return {
         root_dir = function(params)
           local root_patterns = {
             'eslint.config.js',
+            'eslint.config.mjs',
+            'eslint.config.cjs',
+            'eslint.config.ts',
+            'eslint.config.mts',
+            'eslint.config.cts',
             '.eslintrc.js',
+            '.eslintrc.cjs',
             '.eslintrc.json',
+            '.eslintrc.yml',
+            '.eslintrc.yaml',
             '.eslintrc',
             'package.json',
           }
@@ -114,7 +122,21 @@ return {
               -- Check if eslint is executable before trying to lint
               if vim.fn.executable 'eslint' == 1 then
                 -- Also check for config file
-                local eslint_configs = { 'eslint.config.js', '.eslintrc.js', '.eslintrc.json', '.eslintrc', 'package.json' }
+                local eslint_configs = {
+                  'eslint.config.js',
+                  'eslint.config.mjs',
+                  'eslint.config.cjs',
+                  'eslint.config.ts',
+                  'eslint.config.mts',
+                  'eslint.config.cts',
+                  '.eslintrc.js',
+                  '.eslintrc.cjs',
+                  '.eslintrc.json',
+                  '.eslintrc.yml',
+                  '.eslintrc.yaml',
+                  '.eslintrc',
+                  'package.json',
+                }
                 local has_config = false
                 for _, config in ipairs(eslint_configs) do
                   if vim.fn.findfile(config, vim.fn.expand '%:p:h' .. ';') ~= '' then
