@@ -633,6 +633,7 @@ require('lazy').setup({
         'rust-analyzer',
         'rustfmt',
         'codelldb',
+        'markdownlint',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -698,6 +699,9 @@ require('lazy').setup({
       },
 
       formatters = {
+        black = {
+          prepend_args = { '--line-length', '79' },
+        },
         prettierd = {
           require_cwd = false,
           -- cwd = function(self, ctx)

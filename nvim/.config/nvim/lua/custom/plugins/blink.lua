@@ -13,6 +13,11 @@ return {
     },
     completion = {
       documentation = { auto_show = true, auto_show_delay_ms = 500 },
+      keyword = { range = 'full' },
+      trigger = {
+        show_on_keyword = true,
+        show_on_trigger_character = true,
+      },
     },
     sources = {
       default = { 'lsp', 'path', 'snippets', 'buffer' },
