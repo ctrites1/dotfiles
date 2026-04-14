@@ -8,24 +8,6 @@ vim.opt.autoindent = true -- Keep indentation from previous line
 vim.opt.smartindent = true -- Smart auto-indenting for C-like programs
 vim.opt.cindent = true -- More aggressive C-style indenting
 
--- Format on type for specific characters
-vim.api.nvim_create_autocmd('FileType', {
-  pattern = { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'json' },
-  callback = function()
-    -- Format on semicolon and closing brace
-    vim.keymap.set('i', ';', ';<Esc>:lua vim.lsp.buf.format({ async = true })<CR>a', { buffer = true })
-    vim.keymap.set('i', '}', '}<Esc>:lua vim.lsp.buf.format({ async = true })<CR>a', { buffer = true })
-  end,
-})
-
--- Auto-format on certain key presses for specific languages
-vim.api.nvim_create_autocmd('FileType', {
-  pattern = { 'php' },
-  callback = function()
-    vim.keymap.set('i', ';', ';<Esc>:lua vim.lsp.buf.format({ async = true })<CR>a', { buffer = true })
-  end,
-})
-
 -- Enhanced format-on-save with faster timeout and better error handling
 local conform = require 'conform'
 conform.setup {

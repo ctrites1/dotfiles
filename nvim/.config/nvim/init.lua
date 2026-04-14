@@ -527,7 +527,7 @@ require('lazy').setup({
             underline = true,
             update_in_insert = false,
             severity_sort = true,
-          }, vim.api.nvim_get_current_buf())
+          })
         end,
       })
 
@@ -557,6 +557,15 @@ require('lazy').setup({
           },
         },
         html = {},
+        cssls = {},
+        ts_ls = {
+          filetypes = { 'javascript', 'javascriptreact' },
+          settings = {
+            implicitProjectConfiguration = {
+              checkJs = true,
+            },
+          },
+        },
         phpactor = {
           cmd = { 'phpactor', 'language-server' },
           init_options = {
@@ -613,6 +622,7 @@ require('lazy').setup({
         'prettier',
         'prettierd',
         'html-lsp',
+        'css-lsp',
         'phpactor',
         'php-cs-fixer',
         'blade-formatter',
