@@ -373,7 +373,24 @@ require('lazy').setup({
 
       -- Useful status updates for LSP.
       { 'j-hui/fidget.nvim', opts = {} },
-      { 'saghen/blink.cmp' },
+      {
+        'saghen/blink.cmp',
+        version = '*',
+        dependencies = { 'rafamadriz/friendly-snippets' },
+        opts = {
+          keymap = { preset = 'default' },
+          appearance = {
+            nerd_font_variant = 'mono',
+          },
+          sources = {
+            default = { 'lsp', 'path', 'snippets', 'buffer' },
+          },
+          completion = {
+            documentation = { auto_show = true, auto_show_delay_ms = 200 },
+          },
+        },
+        opts_extend = { 'sources.default' },
+      },
     },
     config = function()
       vim.api.nvim_create_autocmd('LspAttach', {
@@ -532,7 +549,7 @@ require('lazy').setup({
       })
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
-      -- capabilities = vim.tbl_deep_extend('force', capabilities, require('blink.cmp').default_capabilities())
+      capabilities = require('blink.cmp').get_lsp_capabilities(capabilities)
 
       local servers = {
         pyright = {
@@ -556,7 +573,11 @@ require('lazy').setup({
             },
           },
         },
+        ts_ls = {
+          filetypes = { 'javascript', 'javascriptreact' },
+        },
         html = {},
+        cssls = {},
         phpactor = {
           cmd = { 'phpactor', 'language-server' },
           init_options = {
@@ -613,6 +634,7 @@ require('lazy').setup({
         'prettier',
         'prettierd',
         'html-lsp',
+        'css-lsp',
         'phpactor',
         'php-cs-fixer',
         'blade-formatter',
