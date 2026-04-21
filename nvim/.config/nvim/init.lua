@@ -246,13 +246,6 @@ require('lazy').setup({
       },
     },
   },
-  {
-    'wakatime/vim-wakatime',
-    lazy = false,
-    setup = function()
-      vim.cmd [[packadd wakatime/vim-wakatime]]
-    end,
-  },
 
   { -- Fuzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
