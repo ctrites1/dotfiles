@@ -96,6 +96,12 @@ symbol = " "
 format = "[$symbol$version]($style) "
 style = "bold yellow"
 
+# Rust
+[rust]
+symbol = "󱘗 "
+format = "[$symbol($version )]($style) "
+style = "bold peach"
+
 # Python with virtual env highlighting
 [python]
 symbol = " "
@@ -152,148 +158,3 @@ vimcmd_symbol = "[❮](bold green)"
 # format = '[\[ $time \]]($style) '
 # time_format = "%R"
 # style = "overlay"
-
-# Language/Tool icons - Set to disabled, uncomment 'disabled = false' to enable
-[aws]
-symbol = "  "
-format = '[$symbol($profile )($region )]($style)'
-style = "bold peach"
-disabled = true
-
-[buf]
-symbol = " "
-format = "[$symbol$version]($style) "
-style = "bold sky"
-disabled = true
-
-[c]
-symbol = " "
-format = "[$symbol($version(-$name) )]($style) "
-style = "bold steel"
-disabled = true
-
-[cmake]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold overlay"
-disabled = true
-
-[conda]
-symbol = " "
-format = "[$symbol$environment]($style) "
-style = "bold green"
-disabled = true
-
-[dart]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold sky"
-disabled = true
-
-[docker_context]
-symbol = " "
-format = "[$symbol$context]($style) "
-style = "bold blue"
-disabled = true
-
-[elixir]
-symbol = " "
-format = '[$symbol($version OTP $otp_version )]($style)'
-style = "bold mauve"
-disabled = true
-
-[elm]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold sky"
-disabled = true
-
-[golang]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold sky"
-disabled = true
-
-[gradle]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold green"
-disabled = true
-
-[haskell]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold mauve"
-disabled = true
-
-[java]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold red"
-disabled = true
-
-[julia]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold mauve"
-disabled = true
-
-[kotlin]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold blue"
-disabled = true
-
-[lua]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold sky"
-disabled = true
-
-[nim]
-symbol = "󰆥 "
-format = "[$symbol($version )]($style) "
-style = "bold yellow"
-disabled = true
-
-[nix_shell]
-symbol = " "
-format = '[$symbol$state $name ]($style)'
-style = "bold sky"
-disabled = true
-
-[ocaml]
-symbol = " "
-format = '[$symbol($version $switch_indicator$switch_name )]($style)'
-style = "bold peach"
-disabled = true
-
-[php]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold mauve"
-disabled = true
-
-[rust]
-symbol = "󱘗 "
-format = "[$symbol($version )]($style) "
-style = "bold peach"
-disabled = false 
-
-[scala]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold red"
-disabled = true
-
-[swift]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold peach"
-disabled = true
-
-[zig]
-symbol = " "
-format = "[$symbol($version )]($style) "
-style = "bold yellow"
-disabled = true
