@@ -9,21 +9,9 @@ add_newline = true
 # Palette: Catppuccin-inspired pastels
 palette = "catppuccin"
 
-[palettes.catppuccin]
-lavender = "#b4befe"
-mauve    = "#cba6f7"
-peach    = "#fab387"
-teal     = "#94e2d5"
-pink     = "#f5c2e7"
-yellow   = "#f9e2af"
-green    = "#a6e3a1"
-red      = "#f38ba8"
-blue     = "#89b4fa"
-sky      = "#89dceb"
-steel    = "#5b8ec6"
-overlay  = "#6c7086"
-
 # Two-line format for breathing room
+# NOTE: must be declared before [palettes.catppuccin] or TOML parses it
+# as a key inside that table instead of the top-level prompt format.
 format = """
 [╭─](bold overlay)\
 $username\
@@ -37,6 +25,20 @@ $rust\
 $python\
 $package
 [╰─](bold overlay)$character"""
+
+[palettes.catppuccin]
+lavender = "#b4befe"
+mauve    = "#cba6f7"
+peach    = "#fab387"
+teal     = "#94e2d5"
+pink     = "#f5c2e7"
+yellow   = "#f9e2af"
+green    = "#a6e3a1"
+red      = "#f38ba8"
+blue     = "#89b4fa"
+sky      = "#89dceb"
+steel    = "#5b8ec6"
+overlay  = "#6c7086"
 
 # Minimal username with subtle styling
 [username]
