@@ -246,13 +246,6 @@ require('lazy').setup({
       },
     },
   },
-  {
-    'wakatime/vim-wakatime',
-    lazy = false,
-    setup = function()
-      vim.cmd [[packadd wakatime/vim-wakatime]]
-    end,
-  },
 
   { -- Fuzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
@@ -373,7 +366,24 @@ require('lazy').setup({
 
       -- Useful status updates for LSP.
       { 'j-hui/fidget.nvim', opts = {} },
-      { 'saghen/blink.cmp' },
+      {
+        'saghen/blink.cmp',
+        version = '*',
+        dependencies = { 'rafamadriz/friendly-snippets' },
+        opts = {
+          keymap = { preset = 'default' },
+          appearance = {
+            nerd_font_variant = 'mono',
+          },
+          sources = {
+            default = { 'lsp', 'path', 'snippets', 'buffer' },
+          },
+          completion = {
+            documentation = { auto_show = true, auto_show_delay_ms = 200 },
+          },
+        },
+        opts_extend = { 'sources.default' },
+      },
     },
     config = function()
       vim.api.nvim_create_autocmd('LspAttach', {
@@ -532,7 +542,7 @@ require('lazy').setup({
       })
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
-      -- capabilities = vim.tbl_deep_extend('force', capabilities, require('blink.cmp').default_capabilities())
+      capabilities = require('blink.cmp').get_lsp_capabilities(capabilities)
 
       local servers = {
         pyright = {
@@ -555,6 +565,9 @@ require('lazy').setup({
               diagnostics = { disable = { 'missing-fields' } },
             },
           },
+        },
+        ts_ls = {
+          filetypes = { 'javascript', 'javascriptreact' },
         },
         html = {},
         cssls = {},
