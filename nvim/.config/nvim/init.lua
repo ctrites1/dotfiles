@@ -34,6 +34,18 @@ vim.schedule(function()
   vim.opt.clipboard = 'unnamedplus'
 end)
 
+vim.g.clipboard = {
+  name = 'OSC 52',
+  copy = {
+    ['+'] = require('vim.ui.clipboard.osc52').copy '+',
+    ['*'] = require('vim.ui.clipboard.osc52').copy '*',
+  },
+  paste = {
+    ['+'] = require('vim.ui.clipboard.osc52').paste '+',
+    ['*'] = require('vim.ui.clipboard.osc52').paste '*',
+  },
+}
+
 -- Enable break indent
 vim.opt.breakindent = true
 
@@ -245,13 +257,6 @@ require('lazy').setup({
         { '<leader>x', group = '󱉥 Lists' },
       },
     },
-  },
-  {
-    'wakatime/vim-wakatime',
-    lazy = false,
-    setup = function()
-      vim.cmd [[packadd wakatime/vim-wakatime]]
-    end,
   },
 
   { -- Fuzzy Finder (files, lsp, etc)
@@ -610,29 +615,10 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua',
-        'prettier',
-        'prettierd',
-        'html-lsp',
-        'phpactor',
-        'php-cs-fixer',
-        'blade-formatter',
-        'php-debug-adapter',
-        'eslint-lsp',
-        'tailwindcss-language-server',
-        'pyright',
-        'black',
-        'flake8',
-        'isort',
-        'debugpy',
         'jsonlint',
         'json-lsp',
-        'yamlfix',
         'yamlfmt',
-        'yamllint',
         'yaml-language-server',
-        'rust-analyzer',
-        'rustfmt',
-        'codelldb',
         'markdownlint',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
