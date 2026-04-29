@@ -566,9 +566,6 @@ require('lazy').setup({
             },
           },
         },
-        ts_ls = {
-          filetypes = { 'javascript', 'javascriptreact' },
-        },
         html = {},
         cssls = {},
         phpactor = {
