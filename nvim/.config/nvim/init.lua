@@ -400,7 +400,32 @@ require('lazy').setup({
           -- Deprecated, waiting till patched lol
           -- map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
 
-          map('gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
+          map('gd', function()
+            vim.lsp.buf.definition {
+              -- Multiple LSP clients can be attached to one buffer (e.g. tailwindcss
+              -- attaches alongside phpactor/typescript-tools). They may each return the
+              -- same location, and Neovim does not dedupe across clients. Strip exact
+              -- duplicates so identical results don't open a selection list.
+              on_list = function(options)
+                local seen = {}
+                local deduped = {}
+                for _, item in ipairs(options.items) do
+                  local key = string.format('%s:%d:%d', item.filename, item.lnum, item.col)
+                  if not seen[key] then
+                    seen[key] = true
+                    table.insert(deduped, item)
+                  end
+                end
+                options.items = deduped
+                vim.fn.setqflist({}, ' ', options)
+                if #deduped == 1 then
+                  vim.cmd 'cfirst'
+                else
+                  vim.cmd 'botright copen'
+                end
+              end,
+            }
+          end, '[G]oto [D]efinition')
 
           map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
 
