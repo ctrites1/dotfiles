@@ -739,6 +739,7 @@ require('lazy').setup({
         python = { 'black', 'isort', stop_after_first = false },
         yaml = { 'yamlfix', 'yamlfmt', stop_after_first = true },
         rust = { 'rustfmt' },
+        astro = { 'prettierd', 'prettier', stop_after_first = true },
       },
 
       formatters = {
