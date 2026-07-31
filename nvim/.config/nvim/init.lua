@@ -447,6 +447,10 @@ require('lazy').setup({
           --  For example, in C this would take you to the header.
           map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
+          -- Neovim only binds signature help in insert/select mode (<C-s>), so this
+          -- covers checking a call's parameters from normal mode.
+          map('gK', vim.lsp.buf.signature_help, 'Signature Help')
+
           -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
           ---@param client vim.lsp.Client
           ---@param method vim.lsp.protocol.Method
@@ -617,6 +621,7 @@ require('lazy').setup({
             'svelte',
             'php',
             'blade',
+            'astro',
           },
           settings = {
             tailwindCSS = {
@@ -671,6 +676,7 @@ require('lazy').setup({
         'rustfmt',
         'codelldb',
         'markdownlint',
+        'astro',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -986,6 +992,7 @@ require('lazy').setup({
         'tsx',
         'css',
         'rust',
+        'astro',
       },
       auto_install = true,
       highlight = {

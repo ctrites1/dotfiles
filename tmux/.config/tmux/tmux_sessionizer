@@ -9,7 +9,7 @@ if [[ $# -eq 1 ]]; then
     selected=$1
 echo "why2"
 else
-    selected=$(printf "%s\n" "$HOME"  $(find /var/www ~/dotfiles/ ~/.config ~/.local ~/warlock ~/projects /mnt/c/Users/catri/ /mnt/c/Users/catri/Documents/Code-Projects/ /mnt/c/Users/catri/Downloads/files_for_server/  -mindepth 0 -maxdepth 3 -type d) | fzf)
+    selected=$(printf "%s\n" "$HOME"  $(find /var/www ~/dotfiles/ ~/.config ~/.local ~/warlock ~/projects /mnt/c/Users/catri/  /mnt/c/Users/catri/Downloads/files_for_server/  -mindepth 0 -maxdepth 3 -type d) | fzf)
 fi
 echo "why"
 
