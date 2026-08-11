@@ -128,12 +128,12 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
---  See `:help vim.highlight.on_yank()`
+--  See `:help vim.hl.on_yank()`
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function()
-    vim.highlight.on_yank()
+    vim.hl.on_yank()
   end,
 })
 
@@ -147,9 +147,6 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
   end
 end ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
-
--- Initialize global LSP config so plugins like blink.cmp can access vim.lsp.config['*']
-vim.lsp.config('*', {})
 
 -- [[ Configure and install plugins ]]
 --  To check the current status of your plugins, run
@@ -313,7 +310,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
-      vim.keymap.set('n', '<leader>sh', '<cmd>Telescope harpoon marks<cr>', { desc = '[S]earch [H]arpoon marks' })
+      vim.keymap.set('n', '<leader>sm', '<cmd>Telescope harpoon marks<cr>', { desc = '[S]earch harpoon [M]arks' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -335,7 +332,7 @@ require('lazy').setup({
 
       -- Shortcut for searching your Neovim configuration files
       vim.keymap.set('n', '<leader>sn', function()
-        builtin.find_files { cwd = vim.fn.stdpath 'config' }
+        builtin.find_files { cwd = vim.fn.stdpath 'config', follow = true }
       end, { desc = '[S]earch [N]eovim files' })
     end,
   },
@@ -360,8 +357,8 @@ require('lazy').setup({
       -- Automatically install LSPs and related tools to stdpath for Neovim
       -- Mason must be loaded before its dependents so we need to set it up here.
       -- NOTE: `opts = {}` is the same as calling `require('mason').setup({})`
-      { 'williamboman/mason.nvim', opts = {} },
-      'williamboman/mason-lspconfig.nvim',
+      { 'mason-org/mason.nvim', opts = {} },
+      'mason-org/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
@@ -546,7 +543,7 @@ require('lazy').setup({
       vim.api.nvim_create_autocmd('FileType', {
         pattern = 'html',
         callback = function()
-          vim.diagnostic.config({
+          vim.diagnostic.config {
             virtual_text = {
               prefix = '●',
               source = 'if_many',
@@ -562,12 +559,13 @@ require('lazy').setup({
             underline = true,
             update_in_insert = false,
             severity_sort = true,
-          })
+          }
         end,
       })
 
-      local capabilities = vim.lsp.protocol.make_client_capabilities()
-      capabilities = require('blink.cmp').get_lsp_capabilities(capabilities)
+      -- Advertise blink.cmp's completion capabilities to every server.
+      -- See `:help lsp-config` ('*' applies to all servers, merged with per-server config)
+      vim.lsp.config('*', { capabilities = require('blink.cmp').get_lsp_capabilities() })
 
       local servers = {
         pyright = {
@@ -681,17 +679,17 @@ require('lazy').setup({
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
+      -- automatic_enable must stay off: it would vim.lsp.enable() every Mason-installed
+      -- server, including rust-analyzer (managed by rustaceanvim) and ts_ls beyond its
+      -- restricted filetypes. Servers are enabled explicitly below instead.
       require('mason-lspconfig').setup {
-        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        automatic_installation = false,
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
-          end,
-        },
+        automatic_enable = false,
       }
+
+      for name, server in pairs(servers) do
+        vim.lsp.config(name, server)
+        vim.lsp.enable(name)
+      end
     end,
   },
 
@@ -920,7 +918,7 @@ require('lazy').setup({
   },
 
   { -- Collection of various small independent plugins/modules
-    'echasnovski/mini.nvim',
+    'nvim-mini/mini.nvim',
     config = function()
       -- Better Around/Inside textobjects
       --

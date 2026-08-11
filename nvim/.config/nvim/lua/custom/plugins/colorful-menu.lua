@@ -1,6 +1,5 @@
 return {
   'xzbdmw/colorful-menu.nvim',
-  dependencies = { 'hrsh7th/nvim-cmp' },
   config = function()
     -- You don't need to set these options.
     require('colorful-menu').setup {
