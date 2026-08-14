@@ -570,9 +570,10 @@ require('lazy').setup({
         end,
       })
 
-      local capabilities = vim.lsp.protocol.make_client_capabilities()
-      capabilities = require('blink.cmp').get_lsp_capabilities(capabilities)
-
+      -- NOTE: Capabilities are not plumbed through by hand. blink.cmp registers its
+      -- completion capabilities on `vim.lsp.config('*')` (see the `vim.lsp.config('*', {})`
+      -- call near the top of this file), and Neovim merges its own
+      -- `make_client_capabilities()` defaults in when the client starts.
       local servers = {
         pyright = {
           settings = {
@@ -597,6 +598,9 @@ require('lazy').setup({
         },
         html = {},
         cssls = {},
+        -- Prisma. Also provides formatting (same engine as `prisma format`), which
+        -- conform picks up through its `lsp_format = 'fallback'` on save.
+        prismals = {},
         phpactor = {
           cmd = { 'phpactor', 'language-server' },
           init_options = {
@@ -648,6 +652,17 @@ require('lazy').setup({
           },
         },
       }
+      -- Register the per-server settings above with Neovim's built-in LSP config.
+      -- mason-lspconfig v2 removed the `handlers` option: it now enables every
+      -- installed server itself via `vim.lsp.enable()`, so settings have to live in
+      -- `vim.lsp.config()`. These merge on top of the defaults nvim-lspconfig ships
+      -- in its `lsp/<server>.lua` files, and are overridden by nothing else.
+      for server_name, server_config in pairs(servers) do
+        vim.lsp.config(server_name, server_config)
+      end
+
+      -- mason-tool-installer accepts both mason package names and lspconfig server
+      -- names (it translates the latter via mason-lspconfig's mappings).
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua',
@@ -682,14 +697,8 @@ require('lazy').setup({
 
       require('mason-lspconfig').setup {
         ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        automatic_installation = false,
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
-          end,
-        },
+        -- `automatic_enable` defaults to true: every mason-installed server is enabled
+        -- with `vim.lsp.enable()`, picking up the `vim.lsp.config()` entries above.
       }
     end,
   },
@@ -994,6 +1003,7 @@ require('lazy').setup({
         'css',
         'rust',
         'astro',
+        'prisma',
       },
       auto_install = true,
       highlight = {
