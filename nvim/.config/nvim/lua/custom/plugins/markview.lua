@@ -1,8 +1,5 @@
--- For `plugins/markview.lua` users.
-return {
-  'OXY2DEV/markview.nvim',
-  lazy = false,
+-- In-buffer Markdown rendering.
 
-  -- Completion for `blink.cmp`
-  dependencies = { 'saghen/blink.cmp' },
-}
+local gh = require('user.util').gh
+
+vim.pack.add { gh 'OXY2DEV/markview.nvim' }
