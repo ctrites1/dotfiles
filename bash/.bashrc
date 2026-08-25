@@ -120,23 +120,36 @@ export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init - bash)"
 
-# fnm (Fast Node Manager) - manages node/npm versions
-# Reads .nvmrc / .node-version on cd via --use-on-cd
+# --- Tool init (replaces an accidental `declare -p`/`declare -f` env+function dump) ---
+
+# Bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# Composer global binaries
+export PATH="$HOME/.config/composer/vendor/bin:$PATH"
+
+# Ensure window size is updated (important for tmux)
+shopt -s checkwinsize
+
+# Initialize Starship prompt
+eval "$(starship init bash)"
+. "$HOME/.cargo/env"
+
+if [[ -z "$TMUX" && "$PWD" == /mnt/* ]]; then
+    cd ~
+fi
+export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
+
+# fnm (Node version manager)
 FNM_PATH="$HOME/.local/share/fnm"
 if [ -d "$FNM_PATH" ]; then
   export PATH="$FNM_PATH:$PATH"
   eval "$(fnm env --use-on-cd --shell bash)"
+
+  # Start each shell on the newest installed version. A project's
+  # .nvmrc/.node-version still wins: --use-on-cd runs after this.
+  __fnm_newest="$(fnm ls | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -1)"
+  [ -n "$__fnm_newest" ] && fnm use --log-level quiet "$__fnm_newest"
+  unset __fnm_newest
 fi
-
-# Neovim (tarball install in /opt, not the apt package)
-export PATH="/opt/nvim-linux-x86_64/bin:$PATH"
-
-# Fix PWD in tmux panes
-if [ -n "$TMUX" ]; then
-    cd "$(pwd)"
-fi
-
-# Initialize Starship prompt
-eval "$(starship init bash)"
-
-[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"

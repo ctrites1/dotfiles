@@ -1,167 +1,122 @@
-return {
+-- Linting
 
-  { -- Linting
-    'mfussenegger/nvim-lint',
-    event = { 'BufReadPre', 'BufNewFile' },
-    config = function()
-      local lint = require 'lint'
-      lint.linters.phpcs = {
-        cmd = 'phpcs',
-        args = {
-          '--report=json',
-          '--standard=phpcs.xml', -- Use your custom ruleset
-          '-',
-        },
-        stdin = true,
-        parse = lint.linters.phpcs.parse, -- Keep the original parser
-      }
-      local eslint = lint.linters.eslint
-      lint.linters.eslint = {
-        cmd = eslint.cmd,
-        args = eslint.args,
-        stdin = eslint.stdin,
-        stream = eslint.stream,
-        ignore_exitcode = true,
-        root_dir = function(params)
-          local root_patterns = {
-            'eslint.config.js',
-            'eslint.config.mjs',
-            'eslint.config.cjs',
-            'eslint.config.ts',
-            'eslint.config.mts',
-            'eslint.config.cts',
-            '.eslintrc.js',
-            '.eslintrc.cjs',
-            '.eslintrc.json',
-            '.eslintrc.yml',
-            '.eslintrc.yaml',
-            '.eslintrc',
-            'package.json',
-          }
-          for _, pattern in ipairs(root_patterns) do
-            local config_file = vim.fn.findfile(pattern, vim.fn.expand '%:p:h' .. ';')
-            if config_file ~= '' then
-              return vim.fn.fnamemodify(config_file, ':h')
-            end
-          end
+local gh = require('user.util').gh
 
-          return vim.fn.expand '%:p:h'
-        end,
-      }
-      lint.linters_by_ft = {
-        python = { 'flake8' },
-        php = { 'phpcs' },
-        javascript = { 'eslint' },
-        typescript = { 'eslint' },
-        javascriptreact = { 'eslint' },
-        typescriptreact = { 'eslint' },
-        clojure = { 'clj-kondo' },
-        dockerfile = { 'hadolint' },
-        inko = { 'inko' },
-        janet = { 'janet' },
-        json = { 'jsonlint' },
-        markdown = { 'markdownlint' },
-        rst = { 'vale' },
-        ruby = { 'ruby' },
-        terraform = { 'tflint' },
-        text = { 'vale' },
-      }
-      lint.linters.markdownlint.args = {
-        '--disable',
-        'MD013',
-        '--',
-      }
+vim.pack.add { gh 'mfussenegger/nvim-lint' }
 
-      -- To allow other plugins to add linters to require('lint').linters_by_ft,
-      -- instead set linters_by_ft like this:
-      -- lint.linters_by_ft = lint.linters_by_ft or {}
-      -- lint.linters_by_ft['markdown'] = { 'markdownlint' }
-      --
-      -- However, note that this will enable a set of default linters,
-      -- which will cause errors unless these tools are available:
-      -- {
-      --   clojure = { "clj-kondo" },
-      --   dockerfile = { "hadolint" },
-      --   inko = { "inko" },
-      --   janet = { "janet" },
-      --   json = { "jsonlint" },
-      --   markdown = { "vale" },
-      --   rst = { "vale" },
-      --   ruby = { "ruby" },
-      --   terraform = { "tflint" },
-      --   text = { "vale" }
-      -- }
-      --
-      -- You can disable the default linters by setting their filetypes to nil:
-      -- lint.linters_by_ft['clojure'] = nil
-      -- lint.linters_by_ft['dockerfile'] = nil
-      -- lint.linters_by_ft['inko'] = nil
-      -- lint.linters_by_ft['janet'] = nil
-      -- lint.linters_by_ft['json'] = nil
-      -- lint.linters_by_ft['markdown'] = nil
-      -- lint.linters_by_ft['rst'] = nil
-      -- lint.linters_by_ft['ruby'] = nil
-      -- lint.linters_by_ft['terraform'] = nil
-      -- lint.linters_by_ft['text'] = nil
+local lint = require 'lint'
 
-      -- Create autocommand which carries out the actual linting
-      -- on the specified events.
-      local lint_augroup = vim.api.nvim_create_augroup('lint', { clear = true })
-      vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWritePost', 'InsertLeave' }, {
-        group = lint_augroup,
-        callback = function()
-          -- Skip non-modifiable buffers and neo-tree
-          if not vim.opt_local.modifiable:get() or vim.bo.filetype == 'neo-tree' then
-            return
-          end
+-- NOTE on customising a shipped linter: mutate the fields you care about rather
+-- than replacing the whole table. nvim-lint linters carry a `parser` function
+-- (not `parse`), and dropping it makes `try_lint` fail with
+-- "attempt to index local 'parser' (a nil value)".
 
-          -- Wrap everything in a protected call to suppress ALL errors
-          local ok = pcall(function()
-            local ft = vim.bo.filetype
-            if ft == 'javascript' or ft == 'typescript' or ft == 'javascriptreact' or ft == 'typescriptreact' then
-              -- Check if eslint is executable before trying to lint
-              if vim.fn.executable 'eslint' == 1 then
-                -- Also check for config file
-                local eslint_configs = {
-                  'eslint.config.js',
-                  'eslint.config.mjs',
-                  'eslint.config.cjs',
-                  'eslint.config.ts',
-                  'eslint.config.mts',
-                  'eslint.config.cts',
-                  '.eslintrc.js',
-                  '.eslintrc.cjs',
-                  '.eslintrc.json',
-                  '.eslintrc.yml',
-                  '.eslintrc.yaml',
-                  '.eslintrc',
-                  'package.json',
-                }
-                local has_config = false
-                for _, config in ipairs(eslint_configs) do
-                  if vim.fn.findfile(config, vim.fn.expand '%:p:h' .. ';') ~= '' then
-                    has_config = true
-                    break
-                  end
-                end
-
-                if has_config then
-                  lint.try_lint()
-                end
-              end
-            else
-              -- For non-JS files, just run the linter normally
-              lint.try_lint()
-            end
-          end)
-
-          -- Silently ignore any errors - we're not even logging them
-          if not ok then
-            -- You could log here if you want to debug later:
-            -- vim.notify("Linting error suppressed", vim.log.levels.DEBUG)
-          end
-        end,
-      })
-    end,
-  },
+-- phpcs: use the project ruleset. Everything else (local vendor/bin lookup,
+-- --stdin-path, json parser) comes from nvim-lint's own definition.
+local phpcs = lint.linters.phpcs
+phpcs.args = {
+  '-q',
+  '--report=json',
+  '--standard=phpcs.xml',
+  function() return '--stdin-path=' .. vim.fn.expand '%:p:.' end,
+  '-',
 }
+
+local eslint_configs = {
+  'eslint.config.js',
+  'eslint.config.mjs',
+  'eslint.config.cjs',
+  'eslint.config.ts',
+  'eslint.config.mts',
+  'eslint.config.cts',
+  '.eslintrc.js',
+  '.eslintrc.cjs',
+  '.eslintrc.json',
+  '.eslintrc.yml',
+  '.eslintrc.yaml',
+  '.eslintrc',
+  'package.json',
+}
+
+---@return string|nil directory holding an eslint config, searching upward
+local function find_eslint_root()
+  for _, pattern in ipairs(eslint_configs) do
+    local config_file = vim.fn.findfile(pattern, vim.fn.expand '%:p:h' .. ';')
+    if config_file ~= '' then return vim.fn.fnamemodify(config_file, ':h') end
+  end
+  return nil
+end
+
+-- eslint: run from the directory holding its config, so both the config lookup
+-- and nvim-lint's `./node_modules/.bin/eslint` resolution work in monorepos.
+-- NOTE: `cwd`, not `root_dir` -- nvim-lint has no `root_dir` field, so the old
+-- config's version of this was silently doing nothing.
+lint.linters.eslint.cwd = find_eslint_root
+
+-- markdownlint: MD013 is line-length, not worth flagging in prose.
+-- `--stdin` must survive: nvim-lint pipes the buffer in. The trailing `--`
+-- terminates `--disable`'s variadic rule list.
+lint.linters.markdownlint.args = { '--stdin', '--disable', 'MD013', '--' }
+
+lint.linters_by_ft = {
+  python = { 'flake8' },
+  php = { 'phpcs' },
+  javascript = { 'eslint' },
+  typescript = { 'eslint' },
+  javascriptreact = { 'eslint' },
+  typescriptreact = { 'eslint' },
+  clojure = { 'clj-kondo' },
+  dockerfile = { 'hadolint' },
+  inko = { 'inko' },
+  janet = { 'janet' },
+  json = { 'jsonlint' },
+  markdown = { 'markdownlint' },
+  rst = { 'vale' },
+  ruby = { 'ruby' },
+  terraform = { 'tflint' },
+  text = { 'vale' },
+}
+
+-- phpcs can be noisy on codebases that don't follow the ruleset; toggle it off
+-- without restarting.
+vim.g.phpcs_enabled = true
+vim.api.nvim_create_user_command('TogglePHPCS', function()
+  vim.g.phpcs_enabled = not vim.g.phpcs_enabled
+  lint.linters_by_ft.php = vim.g.phpcs_enabled and { 'phpcs' } or {}
+  print(vim.g.phpcs_enabled and 'PHPCS enabled' or 'PHPCS disabled')
+end, {})
+
+local js_filetypes = {
+  javascript = true,
+  typescript = true,
+  javascriptreact = true,
+  typescriptreact = true,
+}
+
+---eslint is usually a project-local devDependency rather than on $PATH.
+---@param root string
+---@return boolean
+local function has_eslint_binary(root)
+  if vim.fn.executable 'eslint' == 1 then return true end
+  return vim.fn.executable(root .. '/node_modules/.bin/eslint') == 1
+end
+
+local lint_augroup = vim.api.nvim_create_augroup('lint', { clear = true })
+vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWritePost', 'InsertLeave' }, {
+  group = lint_augroup,
+  callback = function()
+    -- Only lint buffers you can modify, to avoid noise in LSP hover popups.
+    if not vim.bo.modifiable then return end
+
+    -- Errors here are not actionable mid-edit, so they are swallowed.
+    pcall(function()
+      if js_filetypes[vim.bo.filetype] then
+        -- Running eslint with no binary or no config produces noise, not diagnostics.
+        local root = find_eslint_root()
+        if root and has_eslint_binary(root) then lint.try_lint() end
+      else
+        lint.try_lint()
+      end
+    end)
+  end,
+})

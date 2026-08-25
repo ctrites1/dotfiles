@@ -139,3 +139,24 @@ success_symbol = "[❯](bold green)"
 error_symbol = "[❯](bold red)"
 vimcmd_symbol = "[❮](bold green)"
 
+# Battery for laptop (optional - uncomment if wanted)
+# [battery]
+# full_symbol = "󰁹 "
+# charging_symbol = "󰂄 "
+# discharging_symbol = "󰂃 "
+# format = "[$symbol$percentage]($style) "
+# 
+# [[battery.display]]
+# threshold = 20
+# style = "bold red"
+# 
+# [[battery.display]]
+# threshold = 50
+# style = "peach"
+
+# Time display (optional - uncomment if wanted)
+# [time]
+# disabled = false
+# format = '[\[ $time \]]($style) '
+# time_format = "%R"
+# style = "overlay"
