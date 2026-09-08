@@ -3,8 +3,9 @@
 An ADHD-oriented work-session system: a shell-driven "block" timer surfaced in
 YASB, plus a resume note surfaced in the tmux status bar.
 
-Suggested home: `~/dotfiles/focus/` (Stow package), with the scripts stowed into
-`~/.local/bin` and `focus.ps1` copied to the Windows side.
+**Status: working end to end.** All six items that were open in the previous
+revision have been verified except the resurrect/continuum decision. What is
+*not* done is packaging — see "Not yet stowed" below.
 
 ## Architecture
 
@@ -13,25 +14,43 @@ crosses the boundary — deliberately, because shelling out through `wsl.exe` on
 1-second YASB poll makes the bar stutter.
 
 ```
-~/.local/state/focus/  ->  C:\Users\catri\.focus\
+~/.local/state/focus/  ->  C:\Users\catri\.focus\   (symlink, verified)
 ├── block.json    # {"name","starts","ends"}  -> YASB via focus.ps1
 ├── note.txt      # resume note               -> tmux status-right
-└── last-file     # two lines: path, line no. -> nvim, read by `work`/`stop`
-                  #   the path also picks the sub-project + session name
+├── last-file     # two lines: path, line no. -> nvim, read by `work`/`stop`
+│                 #   the path also picks the sub-project + session name
+└── focus.ps1     # lives on the Windows side only; not in the repo
 ```
 
 ## Components
 
-| Piece | Location | Role |
-| --- | --- | --- |
-| `block` / `unblock` | `~/.local/bin` | Start/clear a timed block (writes `block.json`) |
-| `focus-common` | `~/.local/bin` | Sourced by `work`/`stop`: resolves root, last file, sub-project, session name |
-| `work` | `~/.local/bin` | Attach the sub-project session, restore file, pin note to tmux bar |
-| `stop` | `~/.local/bin` | Prompt for note, clear bar, switch off the session (leaves it running) |
-| `focus.ps1` | `C:\Users\catri\.focus\` | Renders the countdown label as JSON for YASB |
-| `focus_block` widget | YASB `config.yaml` | Polls `focus.ps1` at 1 Hz |
-| autocmd | `init.lua` SECTION 2 | Records last file + line on `BufLeave`/`VimLeavePre`, **project files only** |
-| `@rose_pine_status_right_prepend_section` | `tmux.conf` | Renders `#{@focus_note}` |
+| Piece | Location | Tracked in repo? | Role |
+| --- | --- | --- | --- |
+| `block` / `unblock` | `~/.local/bin` | no | Start/clear a timed block (writes `block.json`) |
+| `focus-common` | `~/.local/bin` | no | Sourced by `work`/`stop` (mode 644, not executable): resolves root, last file, sub-project, session name |
+| `work` | `~/.local/bin` | no | Attach the sub-project session, restore file, pin note to tmux bar |
+| `stop` | `~/.local/bin` | no | Prompt for note, clear bar, switch off the session (leaves it running) |
+| `focus.ps1` | `C:\Users\catri\.focus\` | no | Renders the countdown label as JSON for YASB |
+| `focus_block` widget | YASB `config.yaml` | separate repo | Polls `focus.ps1` at 1 Hz; wired into `bars.*.center` |
+| autocmd | `init.lua` SECTION 2, ~L237 | yes | Records last file + line on `BufLeave`/`VimLeavePre`, **project files only** |
+| `@rose_pine_status_right_prepend_section` | `tmux.conf:46` | yes | Renders `#{@focus_note}` |
+
+### Not yet stowed
+
+`focus/` contains only this document. The five shell scripts are real files in
+`~/.local/bin`, and `focus.ps1` exists only under the Windows profile — none of
+them are under version control. Converting to a Stow package means creating
+`focus/.local/bin/{block,unblock,focus-common,work,stop}` and `stow focus`.
+
+One thing to watch when doing it: `work` and `stop` locate `focus-common` with
+`dirname "$(readlink -f "$0")"`. Under Stow, `$0` is a symlink into
+`~/dotfiles/focus/.local/bin/`, `readlink -f` follows it, and `focus-common`
+resolves in that same directory — so the three files must stay siblings. That
+happens to be exactly what Stow produces, but it is load-bearing.
+
+`focus.ps1` has no natural home in a Stow tree (Windows side of the boundary).
+Either keep a copy in `focus/windows/focus.ps1` and copy it by hand, or leave it
+untracked and accept it as the one unversioned piece.
 
 ## Daily loop
 
@@ -45,20 +64,24 @@ stop                              # prompts for note, clears bar, switches away
 ## Design decisions worth preserving
 
 - **Never `set -g status-right` directly.** Rose Pine owns it and reapplies on
-  reload. Use `@rose_pine_status_right_prepend_section '#[fg=#908caa]#{@focus_note}'`,
+  reload. Use `@rose_pine_status_right_prepend_section '#[fg=#9ccfd8]#{@focus_note}'`,
   set *before* TPM runs, and have scripts poke the `@focus_note` user option.
-  Requires tmux >= 3.3 for `#{@user_option}` interpolation; older falls back to
-  `#(cat ~/.local/state/focus/note.txt)`.
+  Requires tmux >= 3.3 for `#{@user_option}` interpolation; **tmux here is 3.4**,
+  so the `#(cat ~/.local/state/focus/note.txt)` fallback is not needed.
 - **One project root, three consumers.** `work`, `stop` and the nvim autocmd all
   resolve `${FOCUS_PROJECT:-~/warlock}`. Export `FOCUS_PROJECT` to point the
   whole system at a different tree; nvim picks it up because it inherits the
   shell's environment. Both sides resolve symlinks before comparing, so the
   recorded path and the guard agree.
 - **The resume note is scoped to the project, and guarded twice.** The autocmd
-  records a buffer only when its resolved path sits under the root; `work`
-  re-checks the prefix and that the file still exists before opening it. The
-  nvim guard is the real fix, the `work` guard covers notes written before it
+  records a buffer only when its resolved path sits under the root (and skips
+  any buffer with a non-empty `buftype` — terminals, help, quickfix, scratch);
+  `work` re-checks the prefix and that the file still exists before opening it.
+  The nvim guard is the real fix, the `work` guard covers notes written before it
   existed and files deleted since.
+- **On `VimLeavePre` the cursor may not belong to the buffer being recorded.**
+  The autocmd trusts `nvim_win_get_cursor` only when `args.buf` is the current
+  buffer, and otherwise falls back to the `"` mark.
 - **The sub-project is discovered, never configured.** `~/warlock` is a
   container of sibling repos (`cablepull`, `warlock-home`, ...). `focus_dir` is
   the first path component under the root taken from the recorded file, so
@@ -66,9 +89,10 @@ stop                              # prompts for note, clears bar, switches away
   the others participates the first time you open a file in it. Falls back to
   the root when there is no usable note.
 - **Session name derives from the sub-project basename** (dots to underscores),
-  matching the existing `prefix + f` sessionizer. That is what makes `work` and
-  `prefix + f` into the same directory converge on one session; hardcoding a
-  name creates a duplicate session pointing at the same directory.
+  matching the existing `prefix + f` sessionizer (`tmux_sessionizer`). That is
+  what makes `work` and `prefix + f` into the same directory converge on one
+  session; hardcoding a name creates a duplicate session pointing at the same
+  directory.
 - **Always force an exact session match, but mind which spelling.** Bare `-t`
   prefix-matches, so `has-session -t cablepull` succeeds against an existing
   `cablepull_backup` and `work` attaches to the wrong repo. `has-session`,
@@ -84,6 +108,8 @@ stop                              # prompts for note, clears bar, switches away
   have already restored the session.
 - **`tmux refresh-client -S` after setting the note.** tmux-sensible sets
   `status-interval 5`; without this the note lags up to 5s on attach.
+- **`block.json` is written to a `.tmp` and `mv`d into place.** The widget polls
+  at 1 Hz and would otherwise catch a half-written file.
 - **Overtime reports, never nags.** Past `ends` the widget flips to `+Nm` and
   changes colour. Interrupting hyperfocus is the expensive failure mode.
 - **No `jq` dependency.** The nvim autocmd writes two plain lines, read in bash
@@ -94,6 +120,9 @@ stop                              # prompts for note, clears bar, switches away
 - **`work` branches on `$TMUX`:** `switch-client` when already inside tmux,
   `attach` otherwise. Plain `attach` errors with "sessions should be nested with
   care".
+- **Both scripts strip a metacharacter before it reaches its consumer.** `block`
+  drops `"` and `\` from the block name so the hand-rolled JSON stays valid;
+  `work` drops `#` from the note because `#` opens a tmux format sequence.
 
 ## Gotchas already hit (do not re-derive)
 
@@ -112,9 +141,8 @@ stop                              # prompts for note, clears bar, switches away
 - **YASB splits `run_cmd` on spaces** before handing it to `subprocess`
   (upstream issue #815), so the script path must contain no spaces.
 - **YASB logs custom-widget exceptions rather than surfacing them.** A widget
-  that silently fails to appear needs the log checked.
-- **`block` was silent on success**, making a working run and a broken run look
-  identical. It now echoes the block name and end time.
+  that silently fails to appear needs `~/.config/yasb/yasb.log` checked. It is
+  currently clean of focus-related entries.
 - **`work` resumed into files outside the project.** Two independent causes,
   both fixed. (1) The autocmd fired on `BufLeave` for *every* buffer, so the
   last file touched anywhere on the machine won — in practice the obsidian vault
@@ -141,21 +169,44 @@ stop                              # prompts for note, clears bar, switches away
   exists for. Hence the `|| true`. (The `[ -n "$f" ] && cmd` one-liners in
   `work` are fine: bash exempts a failed test in an AND-list from `set -e`.)
 
-## Open / unverified
+## Verified (previously open)
 
-1. Re-link the state directory and confirm both directions:
-   ```bash
-   ls -la ~/.local/state/
-   readlink -f ~/.local/state/focus
-   block 1 smoke test
-   powershell.exe -NoProfile -Command 'Get-Content "$env:USERPROFILE\.focus\block.json"'
-   ```
-2. Run `focus.ps1` directly; expect one line of JSON with a visible bar. If an
-   execution-policy error appears, add `-ExecutionPolicy Bypass` to `run_cmd`.
-3. Confirm `focus_block` is listed in a bar's widget array in `config.yaml`, not
-   only defined under `widgets:`. Then `yasbc reload`.
-4. Confirm `~/.local/bin` is on PATH from `.profile` / `.bash_profile` — tmux
-   panes are login shells (`set -g default-command "${SHELL} -l"`).
-5. Verify the overtime branch by letting a 1-minute block expire.
-6. Decide whether to enable `@resurrect-strategy-nvim 'session'` and
-   `@continuum-restore 'on'` (both plugins installed, currently unconfigured).
+Checked against the live system; the commands are here so they can be re-run
+after the Stow migration.
+
+1. **State directory links both ways.** `readlink -f ~/.local/state/focus` ->
+   `/mnt/c/Users/catri/.focus`; a `block` written from WSL is readable from the
+   Windows side.
+2. **`focus.ps1` runs clean.** `powershell.exe -NoProfile -File
+   'C:\Users\catri\.focus\focus.ps1'` emits one line of JSON. No
+   execution-policy error, so `run_cmd` stays
+   `powershell -NoProfile -File C:\Users\catri\.focus\focus.ps1` — no
+   `-ExecutionPolicy Bypass` needed.
+3. **The widget is on a bar**, not merely defined: `bars.*.center:
+   [home, focus_block]`, with `run_interval: 1000`, `return_format: json`,
+   `hide_empty: true`, `encoding: utf-8`.
+4. **`~/.local/bin` is on PATH** from `.profile:25`, which matters because tmux
+   panes are login shells (`tmux.conf:11`, `default-command "${SHELL} -l"`).
+5. **The overtime branch fires.** An expired block renders
+   `{"text":"focus commands  +2m"}`.
+
+## Open
+
+1. **Package it.** See "Not yet stowed" — this is the only substantial work
+   left, and until it is done a machine rebuild loses the scripts.
+2. **Decide on `@resurrect-strategy-nvim 'session'` and `@continuum-restore
+   'on'`.** Both plugins are declared (`tmux.conf:27-28`) and both remain
+   unconfigured. `work` and `stop` are already written to survive a restored,
+   never-attached session, so this is a preference call rather than a blocker.
+3. **`block` is silent on success again.** An earlier revision echoed the block
+   name and end time; the current script ends at the `mv` with no output, so a
+   working run and a broken run look identical from the shell. Worth restoring —
+   it is one `printf` — since the YASB bar is the only other feedback and it
+   sits on the Windows side.
+4. **`.focus-block-widget` has no CSS.** The widget sets `class_name:
+   focus-block-widget` but `styles.css` defines no matching rule, so the
+   countdown inherits default bar styling and the overtime state is not
+   visually distinct. The "changes colour" behaviour described above is
+   currently aspirational.
+5. **`unblock` has no `set -euo pipefail`** unlike its four siblings. Harmless
+   for a one-line `rm -f`, but inconsistent.
