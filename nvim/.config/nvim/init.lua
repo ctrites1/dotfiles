@@ -94,6 +94,7 @@ do
   -- NOTE: 'cindent' is deliberately NOT set -- it mis-indents Lua and Python.
   vim.o.autoindent = true
   vim.o.smartindent = true
+
 end
 
 -- ============================================================
@@ -229,6 +230,44 @@ do
     desc = 'Highlight when yanking (copying) text',
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
     callback = function() vim.hl.on_yank() end,
+  })
+
+  -- Record the last real file + line so the `work` shell script can reopen it.
+  -- Plain text, two lines -- keeps the bash side free of a jq dependency.
+  local focus_file = vim.fn.expand '~/.local/state/focus/last-file'
+
+  -- Only files under this root are recorded. Without the guard the note tracks
+  -- whatever buffer was touched last anywhere on the machine (obsidian vault,
+  -- another repo), and `work` resumes into a file that has nothing to do with
+  -- the project. Keep the default in step with `work` / `stop`.
+  local focus_root = vim.fn.resolve(vim.fn.expand(vim.env.FOCUS_PROJECT or '~/warlock')):gsub('/+$', '')
+
+  vim.api.nvim_create_autocmd({ 'BufLeave', 'VimLeavePre' }, {
+    desc = 'Record cursor position for the work script',
+    group = vim.api.nvim_create_augroup('user-focus-note', { clear = true }),
+    callback = function(args)
+      local file = vim.api.nvim_buf_get_name(args.buf)
+      -- buftype ~= '' filters out terminals, help, quickfix, scratch buffers.
+      if file == '' or vim.bo[args.buf].buftype ~= '' then return end
+
+      -- Resolve before comparing: the buffer name may be relative, and either
+      -- side may run through a symlink.
+      local path = vim.fn.resolve(vim.fn.fnamemodify(file, ':p'))
+      if path:sub(1, #focus_root + 1) ~= focus_root .. '/' then return end
+
+      -- On VimLeavePre the current window may not be showing args.buf, so only
+      -- trust the live cursor when they match; otherwise use the `"` mark.
+      local line
+      if args.buf == vim.api.nvim_get_current_buf() then
+        line = vim.api.nvim_win_get_cursor(0)[1]
+      else
+        line = vim.api.nvim_buf_get_mark(args.buf, '"')[1]
+      end
+      if line < 1 then line = 1 end
+
+      vim.fn.mkdir(vim.fn.fnamemodify(focus_file, ':h'), 'p')
+      vim.fn.writefile({ path, tostring(line) }, focus_file)
+    end,
   })
 
   local ft_indent = vim.api.nvim_create_augroup('user-ft-indent', { clear = true })
@@ -537,7 +576,7 @@ do
       map('gd', function()
         vim.lsp.buf.definition {
           -- Multiple LSP clients can be attached to one buffer (e.g. tailwindcss
-          -- attaches alongside phpactor/typescript-tools). They may each return the
+          -- attaches alongside phpactor/vtsls). They may each return the
           -- same location, and Neovim does not dedupe across clients. Strip exact
           -- duplicates so identical results don't open a selection list.
           on_list = function(options)
@@ -628,6 +667,74 @@ do
   -- completion capabilities on `vim.lsp.config('*')` (see the call at the top of
   -- this section), and Neovim merges its own `make_client_capabilities()`
   -- defaults in when the client starts.
+  -- The Astro server transforms every .astro file to TSX through a Go/WASM build
+  -- of the Astro compiler, and that compiler panics on some transient edit states
+  -- -- an unclosed `<script>` under frontmatter is the reproducible one. The panic
+  -- kills the WASM instance for the life of the process: the server stays up and
+  -- keeps answering, but every file from then on transforms to an empty TSX, so
+  -- completion and diagnostics go quietly dead until the client is restarted.
+  -- Present in compiler 2.x, 3.x and 4.x alike, so there is no version to upgrade
+  -- to -- watch for the server's own report of the failure and restart it.
+  local astro_restart = {} ---@type { pending: boolean, count: integer, timer: uv.uv_timer_t? }
+
+  local function restart_astro()
+    -- `enable(name, false)` stops the running clients; re-enabling replays the
+    -- FileType autocmd so every already-open .astro buffer re-attaches.
+    vim.lsp.enable('astro', false)
+
+    local timer = assert(vim.uv.new_timer())
+    astro_restart.timer = timer
+    local waited = 0
+
+    timer:start(
+      100,
+      100,
+      vim.schedule_wrap(function()
+        waited = waited + 100
+        -- Wait for the old client to actually exit so the new one doesn't race it.
+        if #vim.lsp.get_clients { name = 'astro' } > 0 and waited < 5000 then return end
+        timer:stop()
+        timer:close()
+        astro_restart.timer = nil
+        vim.lsp.enable 'astro'
+        -- `enable` only replays FileType once `vim_did_enter` is set. Do it
+        -- explicitly so a restart during startup re-attaches too; `vim.lsp.start`
+        -- dedupes on config and root, so this is a no-op when it already ran.
+        vim.cmd.doautoall 'nvim.lsp.enable FileType'
+        vim.notify('astro: compiler crashed, restarted the language server', vim.log.levels.WARN)
+      end)
+    )
+  end
+
+  ---Debounced so a burst of transform failures collapses into one restart, and
+  ---capped so a buffer parked in the crashing state backs off instead of looping.
+  local function schedule_astro_restart()
+    if astro_restart.pending or astro_restart.timer then return end
+
+    if astro_restart.count >= 5 then return end
+
+    astro_restart.pending = true
+    astro_restart.count = astro_restart.count + 1
+
+    if astro_restart.count == 5 then
+      vim.notify('astro: compiler keeps crashing -- fix the offending markup, then `:LspRestart astro`', vim.log.levels.ERROR)
+    end
+
+    -- Let the burst settle; by the time this fires the buffer is usually valid
+    -- again (you finished typing the closing tag).
+    vim.defer_fn(function()
+      astro_restart.pending = false
+      restart_astro()
+    end, 2000)
+  end
+
+  astro_restart.pending = false
+  astro_restart.count = 0
+
+  -- Decay the cap so a crash now and another an hour later aren't the same budget.
+  local decay = assert(vim.uv.new_timer())
+  decay:start(300000, 300000, function() astro_restart.count = 0 end)
+
   ---@type table<string, vim.lsp.Config>
   local servers = {
     pyright = {
@@ -651,6 +758,44 @@ do
     },
     html = {},
     cssls = {},
+    -- TypeScript/JavaScript. `vtsls` wraps the same tsserver VS Code drives, so
+    -- it keeps parity on refactors and inlay hints. `ts_ls` is excluded from
+    -- mason-lspconfig's `automatic_enable` below -- running both against one
+    -- buffer is explicitly unsupported.
+    vtsls = {
+      settings = {
+        typescript = {
+          inlayHints = {
+            parameterNames = { enabled = 'all' },
+            parameterTypes = { enabled = true },
+          },
+        },
+        javascript = {
+          inlayHints = {
+            parameterNames = { enabled = 'all' },
+            parameterTypes = { enabled = true },
+          },
+        },
+      },
+    },
+    -- Astro. The handler below is the crash watchdog described above; it only
+    -- inspects the message and always forwards to the default handler, so the
+    -- server's logging still reaches `:LspLog` unchanged.
+    astro = {
+      handlers = {
+        ['window/logMessage'] = function(err, result, ctx, config)
+          if
+            result
+            and result.type == vim.lsp.protocol.MessageType.Error
+            and type(result.message) == 'string'
+            and result.message:match 'error transforming .* to TSX'
+          then
+            schedule_astro_restart()
+          end
+          return vim.lsp.handlers['window/logMessage'](err, result, ctx, config)
+        end,
+      },
+    },
     -- Prisma. Also provides formatting (same engine as `prisma format`), which
     -- conform picks up through its `lsp_format = 'fallback'` on save.
     prismals = {},
@@ -766,29 +911,27 @@ do
     -- EXCEPT rust_analyzer: rustaceanvim (lua/custom/plugins/rustacean.lua)
     -- owns the Rust client, and letting both attach gives you two clients per
     -- Rust buffer with duplicate diagnostics and code actions.
-    automatic_enable = { exclude = { 'rust_analyzer' } },
+    -- EXCEPT ts_ls: `vtsls` (in `servers` above) owns TypeScript. mason still has
+    -- `typescript-language-server` installed, and automatic_enable would otherwise
+    -- start it on every TS buffer alongside vtsls.
+    automatic_enable = { exclude = { 'rust_analyzer', 'ts_ls' } },
   }
 
-  -- TypeScript. `ts_ls` is deliberately not in `servers` above -- typescript-tools
-  -- replaces it and would otherwise double-attach.
-  vim.pack.add { gh 'pmizio/typescript-tools.nvim' }
-  require('typescript-tools').setup {
-    settings = {
-      separate_diagnostic_server = true,
-      publish_diagnostic_on = 'insert_leave',
-      tsserver_file_preferences = {
-        includeInlayParameterNameHints = 'all',
-        includeInlayFunctionParameterTypeHints = true,
-      },
-    },
-  }
-
+  -- vtsls exposes the tsserver source actions as code action kinds rather than
+  -- user commands, so these ask for one kind and apply it without the picker.
   vim.api.nvim_create_autocmd('FileType', {
-    group = vim.api.nvim_create_augroup('user-ts-tools-keymaps', { clear = true }),
+    group = vim.api.nvim_create_augroup('user-ts-keymaps', { clear = true }),
     pattern = { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact' },
     callback = function(event)
-      vim.keymap.set('n', '<leader>io', '<cmd>TSToolsOrganizeImports<CR>', { buffer = event.buf, desc = 'Organize imports' })
-      vim.keymap.set('n', '<leader>ia', '<cmd>TSToolsAddMissingImports<CR>', { buffer = event.buf, desc = 'Add missing imports' })
+      local function source_action(kind)
+        return function() vim.lsp.buf.code_action { context = { only = { kind }, diagnostics = {} }, apply = true } end
+      end
+
+      local map = function(keys, kind, desc) vim.keymap.set('n', keys, source_action(kind), { buffer = event.buf, desc = desc }) end
+
+      map('<leader>io', 'source.organizeImports', 'Organize imports')
+      map('<leader>ia', 'source.addMissingImports.ts', 'Add missing imports')
+      map('<leader>iu', 'source.removeUnused.ts', 'Remove unused')
     end,
   })
 end

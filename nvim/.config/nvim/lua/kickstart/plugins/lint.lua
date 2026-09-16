@@ -42,16 +42,18 @@ local eslint_configs = {
 local function find_eslint_root()
   for _, pattern in ipairs(eslint_configs) do
     local config_file = vim.fn.findfile(pattern, vim.fn.expand '%:p:h' .. ';')
-    if config_file ~= '' then return vim.fn.fnamemodify(config_file, ':h') end
+    if config_file ~= '' then return vim.fn.fnamemodify(config_file, ':p:h') end
   end
   return nil
 end
 
--- eslint: run from the directory holding its config, so both the config lookup
--- and nvim-lint's `./node_modules/.bin/eslint` resolution work in monorepos.
--- NOTE: `cwd`, not `root_dir` -- nvim-lint has no `root_dir` field, so the old
--- config's version of this was silently doing nothing.
-lint.linters.eslint.cwd = find_eslint_root
+-- NOTE: eslint needs to run from the directory holding its config, so both the
+-- config lookup and nvim-lint's `./node_modules/.bin/eslint` resolution work in
+-- monorepos. That is done by passing `cwd` to `try_lint` below, NOT by setting
+-- `lint.linters.eslint.cwd`: that field is a plain string, never evaluated, so
+-- assigning a function to it made nvim-lint hand the function to `vim.cmd.cd`
+-- and warn "Invalid 'args': Cannot convert given Lua type" on every JS/TS
+-- buffer. (`root_dir`, in an older version of this config, did nothing at all.)
 
 -- markdownlint: MD013 is line-length, not worth flagging in prose.
 -- `--stdin` must survive: nvim-lint pipes the buffer in. The trailing `--`
@@ -113,7 +115,7 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWritePost', 'InsertLeave' }, {
       if js_filetypes[vim.bo.filetype] then
         -- Running eslint with no binary or no config produces noise, not diagnostics.
         local root = find_eslint_root()
-        if root and has_eslint_binary(root) then lint.try_lint() end
+        if root and has_eslint_binary(root) then lint.try_lint(nil, { cwd = root }) end
       else
         lint.try_lint()
       end
