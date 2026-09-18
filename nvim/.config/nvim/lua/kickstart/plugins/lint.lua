@@ -55,10 +55,14 @@ end
 -- and warn "Invalid 'args': Cannot convert given Lua type" on every JS/TS
 -- buffer. (`root_dir`, in an older version of this config, did nothing at all.)
 
--- markdownlint: MD013 is line-length, not worth flagging in prose.
--- `--stdin` must survive: nvim-lint pipes the buffer in. The trailing `--`
--- terminates `--disable`'s variadic rule list.
-lint.linters.markdownlint.args = { '--stdin', '--disable', 'MD013', '--' }
+-- markdownlint: rules live in markdownlint.jsonc next to init.lua, because
+-- rule options (like MD046's style) can't be set from the command line.
+-- `--stdin` must survive: nvim-lint pipes the buffer in.
+lint.linters.markdownlint.args = {
+  '--stdin',
+  '--config',
+  vim.fn.stdpath 'config' .. '/markdownlint.jsonc',
+}
 
 lint.linters_by_ft = {
   python = { 'flake8' },

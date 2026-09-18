@@ -1,0 +1,16 @@
+// markdownlint rules for nvim-lint (see lua/kickstart/plugins/lint.lua).
+{
+  // Line length: not worth flagging in prose.
+  "MD013": false,
+  // Nested-list indent. CommonMark nests relative to the parent's content
+  // column (2 under `- `, 3 under `1. `), so one fixed width fights
+  // `- [x]` and numbered items. The parser decides nesting; don't lint it.
+  "MD007": false,
+  // Plain ``` fences are fine for directory trees and output samples.
+  "MD040": false,
+  // Always expect fenced blocks. The default, "consistent", adopts whichever
+  // style appears first, so one accidental indented block (usually list
+  // continuation text indented 4+ columns past the item's content) flips the
+  // expectation and every correct fence below it gets flagged instead.
+  "MD046": { "style": "fenced" }
+}

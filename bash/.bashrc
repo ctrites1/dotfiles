@@ -153,3 +153,7 @@ if [ -d "$FNM_PATH" ]; then
   [ -n "$__fnm_newest" ] && fnm use --log-level quiet "$__fnm_newest"
   unset __fnm_newest
 fi
+
+# Qwen Code PATH block begin
+export PATH='/home/catrites/.local/bin':$PATH
+# Qwen Code PATH block end
