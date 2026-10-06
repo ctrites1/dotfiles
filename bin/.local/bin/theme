@@ -68,11 +68,11 @@ if command -v powershell.exe >/dev/null; then
   " >/dev/null
 fi
 
-# 3. Windows Terminal opacity, on the default profile. A light background needs
-#    to be more solid: the wallpaper showing through hurts dark-on-light text
+# 3. Windows Terminal opacity, on the default profile. A light background is fully
+#    opaque: the wallpaper showing through hurts dark-on-light text
 #    more than light-on-dark. Terminal reloads settings.json as soon as it changes.
 if [[ "$mode" == "light" ]]; then
-  opacity=95
+  opacity=100
 else
   opacity=65
 fi
