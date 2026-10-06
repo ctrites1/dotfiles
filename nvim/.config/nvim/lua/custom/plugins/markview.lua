@@ -22,3 +22,8 @@ require('markview').setup {
     },
   },
 }
+
+-- Toggle the rendering for the current buffer. Useful when the rendered
+-- output is the thing in the way -- markview draws tables with virtual text,
+-- which doesn't always survive a narrow window or horizontal scrolling.
+vim.keymap.set('n', '<leader>tm', '<cmd>Markview toggle<CR>', { desc = '[T]oggle [M]arkview rendering' })

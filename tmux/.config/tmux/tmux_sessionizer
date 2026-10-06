@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
 
-export FZF_DEFAULT_OPTS=" \
---color=bg+:#2d3b55,bg:#212b42,spinner:#9fd4f0,hl:#b78aea \
---color=fg:#d0eaff,header:#b78aea,info:#b8d0ff,pointer:#9fd4f0 \
---color=marker:#9fd4f0,fg+:#d0eaff,prompt:#b8d0ff,hl+:#b78aea"
+# Catppuccin colours, following the `theme` command (~/.local/state/theme)
+if [[ "$(cat ~/.local/state/theme 2>/dev/null)" == "light" ]]; then
+    # Latte
+    export FZF_DEFAULT_OPTS=" \
+--color=bg+:#ccd0da,bg:#eff1f5,spinner:#dc8a78,hl:#d20f39 \
+--color=fg:#4c4f69,header:#d20f39,info:#8839ef,pointer:#dc8a78 \
+--color=marker:#7287fd,fg+:#4c4f69,prompt:#8839ef,hl+:#d20f39"
+else
+    # Mocha
+    export FZF_DEFAULT_OPTS=" \
+--color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8 \
+--color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
+--color=marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8"
+fi
 
 if [[ $# -eq 1 ]]; then
     selected=$1

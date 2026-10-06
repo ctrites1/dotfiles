@@ -1,16 +1,17 @@
 # Starship Config - Aesthetic & Minimal
-# Colors defined in [palettes.catppuccin] below.
+# Colors defined in [palettes.catppuccin_*] below.
 
 "$schema" = 'https://starship.rs/config-schema.json'
 
 command_timeout = 1000
 add_newline = true
 
-# Palette: Catppuccin-inspired pastels
-palette = "catppuccin"
+# Palette: catppuccin_mocha (dark) or catppuccin_latte (light).
+# The `theme` command (~/.local/bin/theme) rewrites this line -- keep it on one line.
+palette = "catppuccin_latte"
 
 # Two-line format for breathing room
-# NOTE: must be declared before [palettes.catppuccin] or TOML parses it
+# NOTE: must be declared before [palettes.catppuccin_*] or TOML parses it
 # as a key inside that table instead of the top-level prompt format.
 format = """
 [╭─](bold overlay)\
@@ -26,7 +27,7 @@ $python\
 $package
 [╰─](bold overlay)$character"""
 
-[palettes.catppuccin]
+[palettes.catppuccin_mocha]
 lavender = "#b4befe"
 mauve    = "#cba6f7"
 peach    = "#fab387"
@@ -37,8 +38,22 @@ green    = "#a6e3a1"
 red      = "#f38ba8"
 blue     = "#89b4fa"
 sky      = "#89dceb"
-steel    = "#5b8ec6"
+sapphire = "#74c7ec"
 overlay  = "#6c7086"
+
+[palettes.catppuccin_latte]
+lavender = "#7287fd"
+mauve    = "#8839ef"
+peach    = "#fe640b"
+teal     = "#179299"
+pink     = "#ea76cb"
+yellow   = "#df8e1d"
+green    = "#40a02b"
+red      = "#d20f39"
+blue     = "#1e66f5"
+sky      = "#04a5e5"
+sapphire = "#209fb5"
+overlay  = "#9ca0b0"
 
 # Minimal username with subtle styling
 [username]
@@ -55,7 +70,7 @@ style = "bold teal"
 
 # Directory with no truncation - always shows full path
 [directory]
-style = "bold steel"
+style = "bold sapphire"
 read_only = " 󰌾"
 read_only_style = "red"
 truncation_length = 0

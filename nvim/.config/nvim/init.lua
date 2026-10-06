@@ -94,7 +94,6 @@ do
   -- NOTE: 'cindent' is deliberately NOT set -- it mis-indents Lua and Python.
   vim.o.autoindent = true
   vim.o.smartindent = true
-
 end
 
 -- ============================================================
@@ -174,6 +173,13 @@ do
   vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic error messages' })
   vim.keymap.set('n', '<leader>dl', vim.diagnostic.setloclist, { desc = 'Open diagnostics list' })
   vim.keymap.set('n', '<leader>tw', '<cmd>ToggleWarnings<CR>', { desc = '[T]oggle [W]arnings' })
+
+  -- Toggles
+  -- 'wrap' is window-local, so `setlocal` keeps this to the current window
+  -- instead of changing the default for every new one. Mainly for markdown
+  -- tables, whose rows are one long line each: soft-wrapping folds every row
+  -- at a different column, so the `|` separators stop lining up.
+  vim.keymap.set('n', '<leader>tr', '<cmd>setlocal wrap!<CR>', { desc = '[T]oggle line w[r]ap' })
 
   -- Git Conflict
   vim.keymap.set('n', '<leader>gco', '<cmd>GitConflictChooseOurs<CR>', { desc = 'Conflict: Choose [O]urs (Current)' })
@@ -1170,60 +1176,81 @@ do
   -- catppuccin's `auto_integrations` detects which plugins are installed by
   -- inspecting 'runtimepath'. With vim.pack that list is only complete once
   -- every `vim.pack.add` above has run -- hence configuring the theme here
-  -- rather than in SECTION 4. Highlight overrides must also come after
-  -- `:colorscheme`, which resets every group.
+  -- rather than in SECTION 4. Highlight overrides go in `custom_highlights`:
+  -- a plain nvim_set_hl after `:colorscheme` would be reset by every reload.
+
+  -- Start in the mode the `theme` shell command last chose (~/.local/bin/theme).
+  -- `flavour = 'auto'` below turns 'background' into latte or mocha, and the
+  -- command flips 'background' in already-running instances over their sockets.
+  local theme_file = io.open(vim.fn.expand '~/.local/state/theme')
+  if theme_file then
+    if theme_file:read '*l' == 'light' then
+      vim.o.background = 'light'
+    else
+      vim.o.background = 'dark'
+    end
+    theme_file:close()
+  end
+
   ---@diagnostic disable-next-line: missing-fields
   require('catppuccin').setup {
-    flavour = 'mocha',
+    flavour = 'auto',
+    background = {
+      light = 'latte',
+      dark = 'mocha',
+    },
     transparent_background = true,
     auto_integrations = true,
     integrations = {
       mini = { enabled = true, indentscope_color = '' },
       mason = true,
     },
+    -- Overrides live here (not as nvim_set_hl calls after `:colorscheme`) so
+    -- they are reapplied with the right palette whenever the flavour changes,
+    -- e.g. via the <leader>tb background toggle.
     custom_highlights = function(colors)
       return {
         MiniIndentscopeSymbol = { fg = colors.rosewater },
         LineNrAbove = { fg = colors.overlay0 },
         LineNrBelow = { fg = colors.overlay0 },
+
+        -- todo-comments colours
+        TodoBgHACK = { bg = colors.peach, fg = colors.base, style = { 'bold' } },
+        TodoFgHACK = { fg = colors.peach },
+        TodoSignHACK = { fg = colors.peach },
+
+        TodoBgWARN = { bg = colors.yellow, fg = colors.base, style = { 'bold' } },
+        TodoFgWARN = { fg = colors.yellow },
+        TodoSignWARN = { fg = colors.yellow },
+
+        TodoBgTEST = { bg = colors.pink, fg = colors.base, style = { 'bold' } },
+        TodoFgTEST = { fg = colors.pink },
+        TodoSignTEST = { fg = colors.pink },
+
+        TodoBgPERF = { bg = colors.mauve, fg = colors.base, style = { 'bold' } },
+        TodoFgPERF = { fg = colors.mauve },
+        TodoSignPERF = { fg = colors.mauve },
+
+        -- Diagnostic styling
+        DiagnosticUnderlineError = { sp = colors.red, style = { 'undercurl' } },
+        DiagnosticUnderlineWarn = { sp = colors.peach, style = { 'undercurl' } },
+        DiagnosticUnderlineInfo = { sp = colors.teal, style = { 'undercurl' } },
+        DiagnosticUnderlineHint = { sp = colors.sky, style = { 'undercurl' } },
+
+        DiagnosticVirtualTextError = { fg = colors.red, style = { 'bold' } },
+        DiagnosticVirtualTextWarn = { fg = colors.peach, style = { 'bold' } },
+        DiagnosticVirtualTextInfo = { fg = colors.teal },
+        DiagnosticVirtualTextHint = { fg = colors.sky },
+
+        DiagnosticSignError = { fg = colors.red, style = { 'bold' } },
+        DiagnosticSignWarn = { fg = colors.peach, style = { 'bold' } },
+        DiagnosticSignInfo = { fg = colors.teal },
+        DiagnosticSignHint = { fg = colors.sky },
       }
     end,
   }
 
   vim.cmd.colorscheme 'catppuccin'
-
-  -- todo-comments colours
-  vim.api.nvim_set_hl(0, 'TodoBgHACK', { bg = '#fba33e', fg = '#1e1e2e', bold = true })
-  vim.api.nvim_set_hl(0, 'TodoFgHACK', { fg = '#fba33e' })
-  vim.api.nvim_set_hl(0, 'TodoSignHACK', { fg = '#fba33e' })
-
-  vim.api.nvim_set_hl(0, 'TodoBgWARN', { bg = '#FBBF24', fg = '#1e1e2e', bold = true })
-  vim.api.nvim_set_hl(0, 'TodoFgWARN', { fg = '#FBBF24' })
-  vim.api.nvim_set_hl(0, 'TodoSignWARN', { fg = '#FBBF24' })
-
-  vim.api.nvim_set_hl(0, 'TodoBgTEST', { bg = '#FF00FF', fg = '#1e1e2e', bold = true })
-  vim.api.nvim_set_hl(0, 'TodoFgTEST', { fg = '#FF00FF' })
-  vim.api.nvim_set_hl(0, 'TodoSignTEST', { fg = '#FF00FF' })
-
-  vim.api.nvim_set_hl(0, 'TodoBgPERF', { bg = '#a87cf3', fg = '#1e1e2e', bold = true })
-  vim.api.nvim_set_hl(0, 'TodoFgPERF', { fg = '#a87cf3' })
-  vim.api.nvim_set_hl(0, 'TodoSignPERF', { fg = '#a87cf3' })
-
-  -- Diagnostic styling
-  vim.api.nvim_set_hl(0, 'DiagnosticUnderlineError', { undercurl = true, sp = '#f44747' })
-  vim.api.nvim_set_hl(0, 'DiagnosticUnderlineWarn', { undercurl = true, sp = '#ff8800' })
-  vim.api.nvim_set_hl(0, 'DiagnosticUnderlineInfo', { undercurl = true, sp = '#2aa198' })
-  vim.api.nvim_set_hl(0, 'DiagnosticUnderlineHint', { undercurl = true, sp = '#4fc1ff' })
-
-  vim.api.nvim_set_hl(0, 'DiagnosticVirtualTextError', { fg = '#f44747', bold = true })
-  vim.api.nvim_set_hl(0, 'DiagnosticVirtualTextWarn', { fg = '#ff8800', bold = true })
-  vim.api.nvim_set_hl(0, 'DiagnosticVirtualTextInfo', { fg = '#2aa198' })
-  vim.api.nvim_set_hl(0, 'DiagnosticVirtualTextHint', { fg = '#4fc1ff' })
-
-  vim.api.nvim_set_hl(0, 'DiagnosticSignError', { fg = '#f44747', bold = true })
-  vim.api.nvim_set_hl(0, 'DiagnosticSignWarn', { fg = '#ff8800', bold = true })
-  vim.api.nvim_set_hl(0, 'DiagnosticSignInfo', { fg = '#2aa198' })
-  vim.api.nvim_set_hl(0, 'DiagnosticSignHint', { fg = '#4fc1ff' })
 end
 
 -- The line beneath this is called `modeline`. See `:help modeline`

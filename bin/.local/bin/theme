@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+# theme: switch the whole system between Catppuccin Mocha (dark) and Latte (light).
+#
+#   theme          toggle
+#   theme dark     switch to dark
+#   theme light    switch to light
+#   theme status   print the current mode
+#
+# The current mode lives in ~/.local/state/theme. Programs that start later
+# (nvim, tmux, the sessionizer's fzf) read that file; this script pokes the
+# ones that are already running.
+
+set -euo pipefail
+
+state_file="$HOME/.local/state/theme"
+terminal_settings="/mnt/c/Users/catri/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json"
+
+current="dark"
+if [[ -r "$state_file" ]]; then
+  current=$(<"$state_file")
+fi
+
+case "${1:-toggle}" in
+  dark | light)
+    mode="$1"
+    ;;
+  toggle)
+    if [[ "$current" == "dark" ]]; then
+      mode="light"
+    else
+      mode="dark"
+    fi
+    ;;
+  status)
+    echo "$current"
+    exit 0
+    ;;
+  *)
+    echo "usage: theme [dark|light|toggle|status]" >&2
+    exit 1
+    ;;
+esac
+
+# 1. Save the choice
+mkdir -p "$(dirname "$state_file")"
+echo "$mode" >"$state_file"
+
+# 2. Windows light/dark mode. Windows Terminal follows it (its colorScheme is a
+#    dark/light pair). Writing the registry alone isn't enough: open apps only
+#    re-read it when told to, via the WM_SETTINGCHANGE "ImmersiveColorSet" broadcast.
+if command -v powershell.exe >/dev/null; then
+  if [[ "$mode" == "light" ]]; then
+    light=1
+  else
+    light=0
+  fi
+  powershell.exe -NoProfile -NonInteractive -Command "
+    \$key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+    Set-ItemProperty -Path \$key -Name AppsUseLightTheme -Value $light
+    Set-ItemProperty -Path \$key -Name SystemUsesLightTheme -Value $light
+    Add-Type -Namespace Win32 -Name Native -MemberDefinition '
+      [DllImport(\"user32.dll\", CharSet = CharSet.Unicode)]
+      public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam,
+        string lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);'
+    \$result = [UIntPtr]::Zero
+    [void][Win32.Native]::SendMessageTimeout([IntPtr]0xffff, 0x1A, [UIntPtr]::Zero,
+      'ImmersiveColorSet', 2, 5000, [ref]\$result)
+  " >/dev/null
+fi
+
+# 3. Windows Terminal opacity, on the default profile. A light background needs
+#    to be more solid: the wallpaper showing through hurts dark-on-light text
+#    more than light-on-dark. Terminal reloads settings.json as soon as it changes.
+if [[ "$mode" == "light" ]]; then
+  opacity=95
+else
+  opacity=65
+fi
+if [[ -w "$terminal_settings" ]]; then
+  python3 - "$terminal_settings" "$opacity" <<'EOF' || echo "theme: couldn't update Windows Terminal opacity" >&2
+import json
+import sys
+
+path, opacity = sys.argv[1], int(sys.argv[2])
+with open(path, encoding="utf-8") as f:
+    settings = json.load(f)
+
+for profile in settings["profiles"]["list"]:
+    if profile.get("guid") == settings["defaultProfile"]:
+        profile["opacity"] = opacity
+
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(settings, f, indent=4, ensure_ascii=False)
+    f.write("\n")
+EOF
+fi
+
+# 4. tmux. Catppuccin sets its colours with `set -o` (only if not already set),
+#    so the old flavour's options must be cleared before re-sourcing tmux.conf,
+#    which reads the state file to pick the flavour.
+if tmux info >/dev/null 2>&1; then
+  tmux show-options -g | awk '/^@(thm_|catppuccin_|_ctp_)/ { print $1 }' |
+    while read -r option; do
+      tmux set-option -gu "$option"
+    done
+  tmux source-file ~/.config/tmux/tmux.conf
+fi
+
+# 5. Every running Neovim. Each one listens on a socket; --remote-expr runs an
+#    expression in it (unlike --remote-send, it doesn't type keys into the buffer).
+for socket in "${XDG_RUNTIME_DIR:-/tmp}"/nvim.*.0; do
+  if [[ -S "$socket" ]]; then
+    nvim --server "$socket" --remote-expr "execute('set background=$mode')" >/dev/null || true
+  fi
+done
+
+# 6. Starship re-reads its config on every prompt, so swapping the palette line
+#    is enough. --follow-symlinks: plain `sed -i` would replace the stow symlink
+#    with a regular file.
+if [[ "$mode" == "light" ]]; then
+  palette="catppuccin_latte"
+else
+  palette="catppuccin_mocha"
+fi
+sed -i --follow-symlinks "s/^palette = .*/palette = \"$palette\"/" ~/.config/starship.toml
+
+# 7. YASB (the Windows status bar). The palette swap lives in its own helper,
+#    theme-yasb, next to this script.
+theme-yasb "$mode" || echo "theme: couldn't update YASB" >&2
+
+echo "theme: $mode"

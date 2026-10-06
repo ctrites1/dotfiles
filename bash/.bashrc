@@ -141,6 +141,9 @@ if [[ -z "$TMUX" && "$PWD" == /mnt/* ]]; then
 fi
 export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 
+# tmux new session will be named 'home'
+alias th='tmux new-session -A -s home -c ~'
+
 # fnm (Node version manager)
 FNM_PATH="$HOME/.local/share/fnm"
 if [ -d "$FNM_PATH" ]; then
@@ -157,3 +160,6 @@ fi
 # Qwen Code PATH block begin
 export PATH='/home/catrites/.local/bin':$PATH
 # Qwen Code PATH block end
+
+# Generated for envman. Do not edit.
+[ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"

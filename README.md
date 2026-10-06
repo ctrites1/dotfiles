@@ -7,6 +7,7 @@ Personal configuration files managed with [GNU Stow](https://www.gnu.org/softwar
 ```
 ~/dotfiles/
 ├── bash/          # Bash configuration
+├── bin/           # Scripts for ~/.local/bin (e.g. `theme`)
 ├── nvim/          # Neovim configuration
 └── ...            # Other application configs
 ```
@@ -43,6 +44,11 @@ sudo apt install stow
    stow */
    ```
 
+3. **Fetch the git submodules** (tmux plugins, incl. the Catppuccin theme):
+   ```bash
+   git submodule update --init
+   ```
+
 ## Usage
 
 **Install a package (create symlinks):**
@@ -64,6 +70,22 @@ stow -R <package-name>
 ```bash
 stow -n <package-name>
 ```
+
+## Light / dark mode
+
+Everything uses Catppuccin: Mocha (dark) and Latte (light).
+
+```bash
+theme          # toggle
+theme light    # or: theme dark
+theme status   # print the current mode
+```
+
+`theme` (in `bin/`) saves the mode to `~/.local/state/theme`, then switches
+Windows' app/system mode (Windows Terminal follows it through its
+Mocha/Latte `colorScheme` pair), reloads tmux, flips every running Neovim, and
+swaps the Starship palette. New nvim, tmux and sessionizer instances read the
+state file on startup.
 
 ## Making Changes
 
