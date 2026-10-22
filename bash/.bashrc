@@ -163,3 +163,12 @@ export PATH='/home/catrites/.local/bin':$PATH
 
 # Generated for envman. Do not edit.
 [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
+
+# Windows PATH cleanup (WSL)
+# WSL appends ~60 Windows folders (/mnt/c/...) to PATH. Those are slow to
+# search from Linux, so every "is this program installed?" check that misses
+# (Neovim plugins, linters, tab completion) can stall for 100+ ms.
+# Drop them all, then add back only the Windows tools actually used, via
+# symlinks in ~/.local/winbin. To add another one:
+#   ln -s "/mnt/c/path/to/tool.exe" ~/.local/winbin/
+export PATH="$(echo "$PATH" | tr ':' '\n' | grep -v '^/mnt/' | paste -sd:):$HOME/.local/winbin"

@@ -64,6 +64,13 @@ lint.linters.markdownlint.args = {
   vim.fn.stdpath 'config' .. '/markdownlint.jsonc',
 }
 
+-- markdownlint is style advice, not bugs: show a gutter sign only. Scoped to
+-- its namespace, so other linters keep their virtual text and underlines.
+vim.diagnostic.config({
+  virtual_text = false,
+  underline = false,
+}, lint.get_namespace 'markdownlint')
+
 lint.linters_by_ft = {
   python = { 'flake8' },
   php = { 'phpcs' },
@@ -103,8 +110,10 @@ local js_filetypes = {
 ---@param root string
 ---@return boolean
 local function has_eslint_binary(root)
-  if vim.fn.executable 'eslint' == 1 then return true end
-  return vim.fn.executable(root .. '/node_modules/.bin/eslint') == 1
+  -- Check the project-local copy first: it's the common case, and a direct
+  -- path check is cheaper than searching every folder on $PATH.
+  if vim.fn.executable(root .. '/node_modules/.bin/eslint') == 1 then return true end
+  return vim.fn.executable 'eslint' == 1
 end
 
 local lint_augroup = vim.api.nvim_create_augroup('lint', { clear = true })

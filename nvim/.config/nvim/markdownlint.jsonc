@@ -6,6 +6,10 @@
   // column (2 under `- `, 3 under `1. `), so one fixed width fights
   // `- [x]` and numbered items. The parser decides nesting; don't lint it.
   "MD007": false,
+  // Multiple consecutive blank lines: harmless spacing, renders the same.
+  "MD012": false,
+  // Multiple consecutive blank lines: harmless spacing, renders the same.
+  "MD012": false,
   // Plain ``` fences are fine for directory trees and output samples.
   "MD040": false,
   // Always expect fenced blocks. The default, "consistent", adopts whichever

@@ -8,7 +8,7 @@ add_newline = true
 
 # Palette: catppuccin_mocha (dark) or catppuccin_latte (light).
 # The `theme` command (~/.local/bin/theme) rewrites this line -- keep it on one line.
-palette = "catppuccin_latte"
+palette = "catppuccin_mocha"
 
 # Two-line format for breathing room
 # NOTE: must be declared before [palettes.catppuccin_*] or TOML parses it
