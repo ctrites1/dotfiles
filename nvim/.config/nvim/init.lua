@@ -937,7 +937,6 @@ do
     'yamllint',
     'yaml-language-server',
     'rust-analyzer',
-    'rustfmt',
     'codelldb',
     'markdownlint',
     'astro',
