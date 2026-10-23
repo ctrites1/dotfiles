@@ -25,6 +25,9 @@ require('ibl').setup {
       'notify',
       'toggleterm',
       'lazyterm',
+      -- markview renders Markdown with inline virtual text, so guides drawn at
+      -- buffer columns land in the wrong place, including inside code blocks.
+      'markdown',
     },
   },
 }

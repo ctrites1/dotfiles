@@ -141,6 +141,9 @@ if [[ -z "$TMUX" && "$PWD" == /mnt/* ]]; then
 fi
 export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 
+# tmux new session will be named 'home'
+alias th='tmux new-session -A -s home -c ~'
+
 # fnm (Node version manager)
 FNM_PATH="$HOME/.local/share/fnm"
 if [ -d "$FNM_PATH" ]; then
@@ -153,3 +156,19 @@ if [ -d "$FNM_PATH" ]; then
   [ -n "$__fnm_newest" ] && fnm use --log-level quiet "$__fnm_newest"
   unset __fnm_newest
 fi
+
+# Qwen Code PATH block begin
+export PATH='/home/catrites/.local/bin':$PATH
+# Qwen Code PATH block end
+
+# Generated for envman. Do not edit.
+[ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
+
+# Windows PATH cleanup (WSL)
+# WSL appends ~60 Windows folders (/mnt/c/...) to PATH. Those are slow to
+# search from Linux, so every "is this program installed?" check that misses
+# (Neovim plugins, linters, tab completion) can stall for 100+ ms.
+# Drop them all, then add back only the Windows tools actually used, via
+# symlinks in ~/.local/winbin. To add another one:
+#   ln -s "/mnt/c/path/to/tool.exe" ~/.local/winbin/
+export PATH="$(echo "$PATH" | tr ':' '\n' | grep -v '^/mnt/' | paste -sd:):$HOME/.local/winbin"

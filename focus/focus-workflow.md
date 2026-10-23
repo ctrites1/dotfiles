@@ -33,7 +33,7 @@ crosses the boundary — deliberately, because shelling out through `wsl.exe` on
 | `focus.ps1` | `C:\Users\catri\.focus\` | no | Renders the countdown label as JSON for YASB |
 | `focus_block` widget | YASB `config.yaml` | separate repo | Polls `focus.ps1` at 1 Hz; wired into `bars.*.center` |
 | autocmd | `init.lua` SECTION 2, ~L237 | yes | Records last file + line on `BufLeave`/`VimLeavePre`, **project files only** |
-| `@rose_pine_status_right_prepend_section` | `tmux.conf:46` | yes | Renders `#{@focus_note}` |
+| `status-right` | `tmux.conf` theme section | yes | Renders `#{@focus_note}` |
 
 ### Not yet stowed
 
@@ -63,9 +63,9 @@ stop                              # prompts for note, clears bar, switches away
 
 ## Design decisions worth preserving
 
-- **Never `set -g status-right` directly.** Rose Pine owns it and reapplies on
-  reload. Use `@rose_pine_status_right_prepend_section '#[fg=#9ccfd8]#{@focus_note}'`,
-  set *before* TPM runs, and have scripts poke the `@focus_note` user option.
+- **Scripts poke `@focus_note`, never `status-right`.** `tmux.conf` owns
+  `status-right` (set after the Catppuccin `run` line, which would otherwise
+  overwrite it) and interpolates `#{@focus_note}`; scripts only set the option.
   Requires tmux >= 3.3 for `#{@user_option}` interpolation; **tmux here is 3.4**,
   so the `#(cat ~/.local/state/focus/note.txt)` fallback is not needed.
 - **One project root, three consumers.** `work`, `stop` and the nvim autocmd all
