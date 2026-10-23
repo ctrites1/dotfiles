@@ -155,6 +155,7 @@ if [ -d "$FNM_PATH" ]; then
   __fnm_newest="$(fnm ls | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -1)"
   [ -n "$__fnm_newest" ] && fnm use --log-level quiet "$__fnm_newest"
   unset __fnm_newest
+    __fnm_use_if_file_found
 fi
 
 # Qwen Code PATH block begin
