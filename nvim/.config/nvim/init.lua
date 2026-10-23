@@ -9,6 +9,9 @@
 --
 -- To inspect plugin state and pending updates:  :lua vim.pack.update(nil, { offline = true })
 -- To update plugins:                            :lua vim.pack.update()
+--
+-- Both cover the plugins that `lazy_load` defers (lua/user/util.lua): they act
+-- on everything vim.pack has on disk, not just what the session has added.
 
 -- ============================================================
 -- SECTION 1: OPTIONS
