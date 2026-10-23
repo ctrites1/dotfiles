@@ -44,6 +44,27 @@ do
 
   vim.o.swapfile = false
 
+  -- Keep Neovim's write machinery from touching the directory it is saving into.
+  -- With 'backupcopy' at its default "auto" every `:w` first probes whether a
+  -- fresh file in that directory would inherit the original's ownership, by
+  -- creating and immediately deleting a file literally named `4913`. On top of
+  -- that, 'backupdir' starts with `.`, so the write backup lands next to the file
+  -- as `<name>~` and is removed again once the write succeeds.
+  --
+  -- Both are invisible here but not to the language servers watching the project.
+  -- `prisma-language-server` lstats whatever appears beside `schema.prisma`,
+  -- loses the race against the delete, and the resulting ENOENT arrives as an
+  -- unhandled promise rejection -- which on Node 15+ terminates the process. The
+  -- server exits mid-save and the buffer is left with no prismals attached until
+  -- it is restarted. Nothing about the formatter is involved; saving is enough.
+  --
+  -- `yes` copies the original and overwrites it in place, which skips the probe;
+  -- dropping `.` from 'backupdir' moves the `~` file out of the project. The
+  -- backup itself is still made (under ~/.local/state/nvim/backup), so the
+  -- crash-during-write protection 'writebackup' provides is retained.
+  vim.o.backupcopy = 'yes'
+  vim.opt.backupdir = { vim.fn.stdpath 'state' .. '/backup//' }
+
   vim.opt.fileformats = { 'unix', 'dos' }
 
   -- Sync clipboard between OS and Neovim.
